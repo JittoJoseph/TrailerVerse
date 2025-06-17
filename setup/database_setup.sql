@@ -2,9 +2,6 @@
 -- TrailerVerse Database Schema (3NF Compliant)
 -- ============================================
 
-CREATE DATABASE IF NOT EXISTS trailerverse;
-USE trailerverse;
-
 -- 1. USERS TABLE
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
