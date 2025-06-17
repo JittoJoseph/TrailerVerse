@@ -16,6 +16,7 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,12 +38,16 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    body { font-family: 'Inter', sans-serif; }
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
     .gradient-text {
       background: linear-gradient(135deg, #ffffff, #a1a1aa);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
+
     .glass {
       background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(10px);
@@ -62,7 +67,7 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
         </div>
         <span class="text-xl font-semibold">TrailerVerse</span>
       </div>
-      
+
       <div class="hidden md:flex items-center space-x-8">
         <a href="#" class="text-gray-300 hover:text-white transition-colors">Discover</a>
         <a href="#" class="text-gray-300 hover:text-white transition-colors">Movies</a>
@@ -75,93 +80,93 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
   </nav>
 
   <!-- Main Content -->
-  <div class="pt-20 grid lg:grid-cols-4 gap-8 max-w-7xl mx-auto px-6">
-    
+  <div class="pt-28 grid lg:grid-cols-4 gap-8 max-w-7xl mx-auto px-6">
+
     <!-- Left Content (3 columns) -->
     <div class="lg:col-span-3">
-      
+
       <!-- Hero Section -->
       <?php if ($featuredMovie): ?>
-      <section class="relative h-96 rounded-2xl overflow-hidden mb-12">
-        <img src="<?= getTMDBBackdropUrl($featuredMovie['backdrop_path']) ?>" 
-             alt="<?= htmlspecialchars($featuredMovie['title']) ?>"
-             class="w-full h-full object-cover">
-        
-        <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
-        
-        <div class="absolute bottom-8 left-8 max-w-lg">
-          <h1 class="text-4xl font-bold mb-4 gradient-text">
-            <?= htmlspecialchars($featuredMovie['title']) ?>
-          </h1>
-          <p class="text-gray-300 mb-6 leading-relaxed">
-            <?= htmlspecialchars(substr($featuredMovie['overview'], 0, 150)) ?>...
-          </p>
-          <div class="flex items-center space-x-4">
-            <button class="px-6 py-3 bg-white text-slate-950 rounded-lg hover:bg-gray-100 transition-colors font-medium">
-              <i class="fas fa-play mr-2"></i>
-              Watch Trailer
-            </button>
-            <button class="px-6 py-3 glass rounded-lg hover:bg-white/10 transition-colors">
-              <i class="fas fa-plus mr-2"></i>
-              My List
-            </button>
+        <section class="relative h-96 rounded-2xl overflow-hidden mb-12">
+          <img src="<?= getTMDBBackdropUrl($featuredMovie['backdrop_path']) ?>"
+            alt="<?= htmlspecialchars($featuredMovie['title']) ?>"
+            class="w-full h-full object-cover">
+
+          <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
+
+          <div class="absolute bottom-8 left-8 max-w-lg">
+            <h1 class="text-4xl font-bold mb-4 gradient-text">
+              <?= htmlspecialchars($featuredMovie['title']) ?>
+            </h1>
+            <p class="text-gray-300 mb-6 leading-relaxed">
+              <?= htmlspecialchars(substr($featuredMovie['overview'], 0, 150)) ?>...
+            </p>
+            <div class="flex items-center space-x-4">
+              <button class="px-6 py-3 bg-white text-slate-950 rounded-lg hover:bg-gray-100 transition-colors font-medium">
+                <i class="fas fa-play mr-2"></i>
+                Watch Trailer
+              </button>
+              <button class="px-6 py-3 glass rounded-lg hover:bg-white/10 transition-colors">
+                <i class="fas fa-plus mr-2"></i>
+                My List
+              </button>
+            </div>
           </div>
-        </div>
-        
-        <div class="absolute top-4 right-4 glass px-3 py-1 rounded-full">
-          <i class="fas fa-star text-yellow-400 mr-1"></i>
-          <?= number_format($featuredMovie['vote_average'], 1) ?>
-        </div>
-      </section>
+
+          <div class="absolute top-4 right-4 glass px-3 py-1 rounded-full">
+            <i class="fas fa-star text-yellow-400 mr-1"></i>
+            <?= number_format($featuredMovie['vote_average'], 1) ?>
+          </div>
+        </section>
       <?php endif; ?>
 
       <!-- Trending Movies -->
       <?php if ($trendingMovies && isset($trendingMovies['results'])): ?>
-      <section>
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-semibold">Trending Now</h2>
-          <button class="text-gray-400 hover:text-white transition-colors">
-            View All <i class="fas fa-arrow-right ml-1"></i>
-          </button>
-        </div>
-        
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          <?php foreach (array_slice($trendingMovies['results'], 0, 12) as $index => $movie): ?>
-          <div class="group cursor-pointer">
-            <div class="relative rounded-lg overflow-hidden mb-3">
-              <img src="<?= getTMDBPosterUrl($movie['poster_path']) ?>"
-                   alt="<?= htmlspecialchars($movie['title']) ?>"
-                   class="w-full h-64 object-cover transition-transform group-hover:scale-105">
-              
-              <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <button class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center glass">
-                  <i class="fas fa-play text-white"></i>
-                </button>
-              </div>
-              
-              <div class="absolute top-2 left-2 w-6 h-6 bg-white text-slate-950 rounded-full flex items-center justify-center text-xs font-bold">
-                <?= $index + 1 ?>
-              </div>
-              
-              <div class="absolute top-2 right-2 glass px-2 py-1 rounded text-xs">
-                <?= number_format($movie['vote_average'], 1) ?>
-              </div>
-            </div>
-            
-            <h3 class="text-sm font-medium group-hover:text-gray-300 transition-colors">
-              <?= htmlspecialchars(strlen($movie['title']) > 20 ? substr($movie['title'], 0, 20) . '...' : $movie['title']) ?>
-            </h3>
-            <p class="text-xs text-gray-500"><?= date('Y', strtotime($movie['release_date'])) ?></p>
+        <section>
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-semibold">Trending Now</h2>
+            <button class="text-gray-400 hover:text-white transition-colors">
+              View All <i class="fas fa-arrow-right ml-1"></i>
+            </button>
           </div>
-          <?php endforeach; ?>
-        </div>
-      </section>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <?php foreach (array_slice($trendingMovies['results'], 0, 12) as $index => $movie): ?>
+              <div class="group cursor-pointer">
+                <div class="relative rounded-lg overflow-hidden mb-3">
+                  <img src="<?= getTMDBPosterUrl($movie['poster_path']) ?>"
+                    alt="<?= htmlspecialchars($movie['title']) ?>"
+                    class="w-full h-64 object-cover transition-transform group-hover:scale-105">
+
+                  <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center glass">
+                      <i class="fas fa-play text-white"></i>
+                    </button>
+                  </div>
+
+                  <div class="absolute top-2 left-2 w-6 h-6 bg-white text-slate-950 rounded-full flex items-center justify-center text-xs font-bold">
+                    <?= $index + 1 ?>
+                  </div>
+
+                  <div class="absolute top-2 right-2 glass px-2 py-1 rounded text-xs">
+                    <?= number_format($movie['vote_average'], 1) ?>
+                  </div>
+                </div>
+
+                <h3 class="text-sm font-medium group-hover:text-gray-300 transition-colors">
+                  <?= htmlspecialchars(strlen($movie['title']) > 20 ? substr($movie['title'], 0, 20) . '...' : $movie['title']) ?>
+                </h3>
+                <p class="text-xs text-gray-500"><?= date('Y', strtotime($movie['release_date'])) ?></p>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </section>
       <?php endif; ?>
     </div>
 
     <!-- Right Sidebar (1 column) -->
     <div class="lg:col-span-1 space-y-8">
-      
+
       <!-- Quick Stats -->
       <div class="glass rounded-2xl p-6">
         <h3 class="text-lg font-semibold mb-4">Community Stats</h3>
@@ -194,7 +199,7 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
               <p class="text-xs text-gray-400">@moviebuff23</p>
             </div>
           </div>
-          
+
           <div class="flex items-center space-x-3">
             <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
               <i class="fas fa-film text-white text-xs"></i>
@@ -204,7 +209,7 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
               <p class="text-xs text-gray-400">@cinephile_sarah</p>
             </div>
           </div>
-          
+
           <div class="flex items-center space-x-3">
             <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
               <i class="fas fa-trophy text-white text-xs"></i>
@@ -227,14 +232,14 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
               <div class="w-4/5 h-full bg-white rounded-full"></div>
             </div>
           </div>
-          
+
           <div class="flex items-center justify-between">
             <span class="text-sm">Sci-Fi</span>
             <div class="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
               <div class="w-3/5 h-full bg-white rounded-full"></div>
             </div>
           </div>
-          
+
           <div class="flex items-center justify-between">
             <span class="text-sm">Drama</span>
             <div class="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
@@ -263,4 +268,5 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
   </footer>
 
 </body>
+
 </html>
