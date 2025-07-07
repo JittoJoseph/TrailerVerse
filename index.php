@@ -1,4 +1,5 @@
 <?php
+require_once 'config/app.php';
 require_once 'config/tmdb_config.php';
 require_once 'services/MovieService.php';
 
