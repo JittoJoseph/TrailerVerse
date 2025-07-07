@@ -12,9 +12,24 @@
       <a href="index.php" class="text-gray-300 hover:text-white transition-colors">Discover</a>
       <a href="#" class="text-gray-300 hover:text-white transition-colors">Movies</a>
       <a href="#" class="text-gray-300 hover:text-white transition-colors">Community</a>
-      <button class="px-6 py-2 bg-white text-slate-950 rounded-lg hover:bg-gray-100 transition-colors font-medium">
-        Sign In
-      </button>
+
+      <?php if (isset($_SESSION['username'])): ?>
+        <div class="flex items-center space-x-4">
+          <a href="auth/profile.php" class="text-gray-300 hover:text-white transition-colors">
+            <i class="fas fa-user mr-1"></i>Profile
+          </a>
+          <a href="auth/logout.php" class="px-4 py-2 glass rounded-lg hover:bg-white/10 transition-colors">
+            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+          </a>
+        </div>
+      <?php else: ?>
+        <div class="flex items-center space-x-4">
+          <a href="auth/signin.php" class="text-gray-300 hover:text-white transition-colors">Sign In</a>
+          <a href="auth/signup.php" class="px-6 py-2 bg-white text-slate-950 rounded-lg hover:bg-gray-100 transition-colors font-medium">
+            Sign Up
+          </a>
+        </div>
+      <?php endif; ?>
     </div>
   </div>
 </nav>
