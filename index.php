@@ -6,10 +6,10 @@ require_once 'services/MovieService.php';
 $movieService = new MovieService();
 $trendingMovies = $movieService->getTrendingMovies();
 
-// Get featured movie (random from top 5)
+// Get featured movie (random from top 10)
 $featuredMovie = null;
 if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovies['results']) > 0) {
-  $topMovies = array_slice($trendingMovies['results'], 0, 5);
+  $topMovies = array_slice($trendingMovies['results'], 0, 10);
   $featuredMovie = $topMovies[array_rand($topMovies)];
 }
 ?>
@@ -18,69 +18,16 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TrailerVerse - Your Cinematic Universe</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'slate': {
-              950: '#0a0a0a'
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-
-    .gradient-text {
-      background: linear-gradient(135deg, #ffffff, #a1a1aa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .glass {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-  </style>
+  <?php include 'includes/head.php'; ?>
 </head>
 
 <body class="bg-slate-950 text-white min-h-screen">
 
-  <!-- Navigation -->
-  <nav class="fixed top-0 w-full z-50 glass">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-          <i class="fas fa-film text-slate-950"></i>
-        </div>
-        <span class="text-xl font-semibold">TrailerVerse</span>
-      </div>
-
-      <div class="hidden md:flex items-center space-x-8">
-        <a href="#" class="text-gray-300 hover:text-white transition-colors">Discover</a>
-        <a href="#" class="text-gray-300 hover:text-white transition-colors">Movies</a>
-        <a href="#" class="text-gray-300 hover:text-white transition-colors">Community</a>
-        <button class="px-6 py-2 bg-white text-slate-950 rounded-lg hover:bg-gray-100 transition-colors font-medium">
-          Sign In
-        </button>
-      </div>
-    </div>
-  </nav>
+  <?php include 'includes/header.php'; ?>
 
   <!-- Main Content -->
-  <div class="pt-28 grid lg:grid-cols-4 gap-8 max-w-7xl mx-auto px-6">
+  <div class="pt-24 grid lg:grid-cols-4 gap-8 max-w-7xl mx-auto px-6">
 
     <!-- Left Content (3 columns) -->
     <div class="lg:col-span-3">
@@ -132,7 +79,7 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
 
           <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             <?php foreach (array_slice($trendingMovies['results'], 0, 12) as $index => $movie): ?>
-              <div class="group cursor-pointer">
+              <a href="movie-detail.php?id=<?= $movie['id'] ?>" class="group cursor-pointer">
                 <div class="relative rounded-lg overflow-hidden mb-3">
                   <img src="<?= getTMDBPosterUrl($movie['poster_path']) ?>"
                     alt="<?= htmlspecialchars($movie['title']) ?>"
@@ -157,7 +104,7 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
                   <?= htmlspecialchars(strlen($movie['title']) > 20 ? substr($movie['title'], 0, 20) . '...' : $movie['title']) ?>
                 </h3>
                 <p class="text-xs text-gray-500"><?= date('Y', strtotime($movie['release_date'])) ?></p>
-              </div>
+              </a>
             <?php endforeach; ?>
           </div>
         </section>
@@ -260,12 +207,7 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="mt-20 border-t border-gray-800 py-8">
-    <div class="max-w-7xl mx-auto px-6 text-center">
-      <p class="text-gray-400 text-sm">TrailerVerse © 2024 - Your Cinematic Universe</p>
-    </div>
-  </footer>
+  <?php include 'includes/footer.php'; ?>
 
 </body>
 
