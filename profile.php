@@ -1,6 +1,6 @@
 <?php
-require_once '../config/app.php';
-require_once '../config/database.php';
+require_once './config/app.php';
+require_once './config/database.php';
 
 // Redirect if not logged in
 if (!isLoggedIn()) {
@@ -53,7 +53,7 @@ $user = $stmt->fetch();
 
 <body class="bg-slate-950 text-white min-h-screen">
 
-  <?php include '../includes/header.php'; ?> <div class="pt-24 max-w-4xl mx-auto px-6 py-8">
+  <?php include './includes/header.php'; ?> <div class="pt-24 max-w-4xl mx-auto px-6 py-8">
     <div class="glass rounded-2xl p-8">
       <div class="flex items-center space-x-6 mb-8">
         <div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -129,7 +129,7 @@ $user = $stmt->fetch();
           <button class="px-6 py-2 bg-white text-slate-950 rounded-lg hover:bg-gray-100 transition-colors">
             <i class="fas fa-edit mr-2"></i>Edit Profile
           </button>
-          <a href="../index.php" class="px-6 py-2 glass rounded-lg hover:bg-white/10 transition-colors">
+          <a href="./index.php" class="px-6 py-2 glass rounded-lg hover:bg-white/10 transition-colors">
             <i class="fas fa-home mr-2"></i>Back to Home
           </a>
         </div>
@@ -137,7 +137,7 @@ $user = $stmt->fetch();
     </div>
   </div>
 
-  <?php include '../includes/footer.php'; ?>
+  <?php include './includes/footer.php'; ?>
 </body>
 
 </html>
