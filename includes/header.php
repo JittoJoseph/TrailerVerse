@@ -15,7 +15,7 @@
 
       <?php if (isset($_SESSION['username'])): ?>
         <div class="flex items-center space-x-4">
-          <a href="auth/profile.php" class="text-gray-300 hover:text-white transition-colors">
+          <a href="profile.php" class="text-gray-300 hover:text-white transition-colors">
             <i class="fas fa-user mr-1"></i>Profile
           </a>
           <a href="auth/logout.php" class="px-4 py-2 glass rounded-lg hover:bg-white/10 transition-colors">
