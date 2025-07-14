@@ -76,7 +76,7 @@ $featuredMovie = $featuredCandidates ? $featuredCandidates[array_rand($featuredC
 
           <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             <?php foreach (array_slice($movies, 0, 12) as $index => $movie): ?>
-              <a href="movie-detail.php?id=<?= $movie['id'] ?>" class="group cursor-pointer">
+              <a class=" group cursor-pointer">
                 <div class="relative rounded-lg overflow-hidden mb-3">
                   <img src="<?= getTMDBPosterUrl($movie['poster_path']) ?>"
                     alt="<?= $movie['title'] ?>"
