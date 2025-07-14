@@ -5,47 +5,38 @@ require_once '../config/database.php';
 $error = '';
 $success = '';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-  $username = trim($_POST['username'] ?? '');
-  $password = trim($_POST['password'] ?? '');
-  $confirm_password = trim($_POST['confirm_password'] ?? '');
+if ($_POST) {
+  $username = trim($_POST['username']);
+  $password = trim($_POST['password']);
+  $confirm = trim($_POST['confirm_password']);
 
-  // Basic validation
-  if (empty($username) || empty($password) || empty($confirm_password)) {
+  if (!$username || !$password || !$confirm) {
     $error = 'Please fill in all fields';
-  } elseif ($password !== $confirm_password) {
+  } elseif ($password !== $confirm) {
     $error = 'Passwords do not match';
   } elseif (strlen($password) < 6) {
     $error = 'Password must be at least 6 characters long';
-  } elseif (strlen($username) < 3) {
-    $error = 'Username must be at least 3 characters long';
-  } elseif (strlen($username) > 20) {
-    $error = 'Username must be less than 20 characters';
+  } elseif (strlen($username) < 3 || strlen($username) > 20) {
+    $error = 'Username must be 3-20 characters';
   } else {
-    try {
-      $db = new Database();
-      $conn = $db->connect();
+    $db = new Database();
+    $conn = $db->connect();
 
-      // Check if username already exists
-      $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
-      $stmt->execute([$username]);
-      if ($stmt->fetch()) {
-        $error = 'Username already exists';
+    // Check if username exists
+    $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
+    $stmt->execute([$username]);
+
+    if ($stmt->fetch()) {
+      $error = 'Username already exists';
+    } else {
+      // Create user
+      $stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
+      if ($stmt->execute([$username, password_hash($password, PASSWORD_DEFAULT)])) {
+        $success = 'Account created successfully! You can now sign in.';
+        $username = '';
       } else {
-        // Create new user
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
-
-        if ($stmt->execute([$username, $hashed_password])) {
-          $success = 'Account created successfully! You can now sign in.';
-          // Clear form data
-          $username = '';
-        } else {
-          $error = 'Failed to create account. Please try again.';
-        }
+        $error = 'Failed to create account. Please try again.';
       }
-    } catch (PDOException $e) {
-      $error = 'Connection failed. Please try again.';
     }
   }
 }
@@ -100,14 +91,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <?php if ($error): ?>
       <div class="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg mb-6">
         <i class="fas fa-exclamation-triangle mr-2"></i>
-        <?= htmlspecialchars($error) ?>
+        <?= $error ?>
       </div>
     <?php endif; ?>
 
     <?php if ($success): ?>
       <div class="bg-green-500/20 border border-green-500/50 text-green-300 px-4 py-3 rounded-lg mb-6">
         <i class="fas fa-check-circle mr-2"></i>
-        <?= htmlspecialchars($success) ?>
+        <?= $success ?>
       </div>
     <?php endif; ?>
 
@@ -115,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       <div>
         <label for="username" class="block text-sm font-medium mb-2">Username</label>
         <input type="text" id="username" name="username" required
-          value="<?= htmlspecialchars($username ?? '') ?>"
+          value="<?= $_POST['username'] ?? '' ?>"
           class="w-full p-3 rounded-lg glass border border-gray-600 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all">
         <p class="text-xs text-gray-400 mt-1">3-20 characters, unique username</p>
       </div>
