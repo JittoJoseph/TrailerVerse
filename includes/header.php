@@ -11,7 +11,7 @@
     <div class="hidden md:flex items-center space-x-8">
       <a href="index.php" class="text-gray-300 hover:text-white transition-colors">Discover</a>
       <a href="#" class="text-gray-300 hover:text-white transition-colors">Movies</a>
-      <a href="#" class="text-gray-300 hover:text-white transition-colors">Community</a>
+      <a href="#" class="text-gray-300 hover:text-white transition-colors">Feed</a>
 
       <?php if (isset($_SESSION['username'])): ?>
         <div class="flex items-center space-x-4">
