@@ -16,6 +16,8 @@ class Database
         $this->password
       );
       $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+      // Fetch associative arrays by default
+      $this->connection->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
       return $this->connection;
     } catch (PDOException $e) {
       echo "Connection failed: " . $e->getMessage();

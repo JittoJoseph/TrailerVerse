@@ -3,16 +3,12 @@ require_once 'config/app.php';
 require_once 'config/tmdb_config.php';
 require_once 'services/MovieService.php';
 
-// Get movie data
 $movieService = new MovieService();
 $trendingMovies = $movieService->getTrendingMovies();
-
-// Get featured movie (random from top 10)
-$featuredMovie = null;
-if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovies['results']) > 0) {
-  $topMovies = array_slice($trendingMovies['results'], 0, 10);
-  $featuredMovie = $topMovies[array_rand($topMovies)];
-}
+$movies = $trendingMovies['results'] ?? [];
+// Random featured movie from top 12 trending
+$featuredCandidates = array_slice($movies, 0, min(12, count($movies)));
+$featuredMovie = $featuredCandidates ? $featuredCandidates[array_rand($featuredCandidates)] : null;
 ?>
 
 <!DOCTYPE html>
@@ -37,17 +33,17 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
       <?php if ($featuredMovie): ?>
         <section class="relative h-96 rounded-2xl overflow-hidden mb-12">
           <img src="<?= getTMDBBackdropUrl($featuredMovie['backdrop_path']) ?>"
-            alt="<?= htmlspecialchars($featuredMovie['title']) ?>"
+            alt="<?= $featuredMovie['title'] ?>"
             class="w-full h-full object-cover">
 
           <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
 
           <div class="absolute bottom-8 left-8 max-w-lg">
             <h1 class="text-4xl font-bold mb-4 gradient-text">
-              <?= htmlspecialchars($featuredMovie['title']) ?>
+              <?= $featuredMovie['title'] ?>
             </h1>
             <p class="text-gray-300 mb-6 leading-relaxed">
-              <?= htmlspecialchars(substr($featuredMovie['overview'], 0, 150)) ?>...
+              <?= substr($featuredMovie['overview'], 0, 150) ?>...
             </p>
             <div class="flex items-center space-x-4">
               <button class="px-6 py-3 bg-white text-slate-950 rounded-lg hover:bg-gray-100 transition-colors font-medium">
@@ -69,7 +65,7 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
       <?php endif; ?>
 
       <!-- Trending Movies -->
-      <?php if ($trendingMovies && isset($trendingMovies['results'])): ?>
+      <?php if ($movies): ?>
         <section>
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-2xl font-semibold">Trending Now</h2>
@@ -79,11 +75,11 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
           </div>
 
           <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <?php foreach (array_slice($trendingMovies['results'], 0, 12) as $index => $movie): ?>
+            <?php foreach (array_slice($movies, 0, 12) as $index => $movie): ?>
               <a href="movie-detail.php?id=<?= $movie['id'] ?>" class="group cursor-pointer">
                 <div class="relative rounded-lg overflow-hidden mb-3">
                   <img src="<?= getTMDBPosterUrl($movie['poster_path']) ?>"
-                    alt="<?= htmlspecialchars($movie['title']) ?>"
+                    alt="<?= $movie['title'] ?>"
                     class="w-full h-64 object-cover transition-transform group-hover:scale-105">
 
                   <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -102,7 +98,7 @@ if ($trendingMovies && isset($trendingMovies['results']) && count($trendingMovie
                 </div>
 
                 <h3 class="text-sm font-medium group-hover:text-gray-300 transition-colors">
-                  <?= htmlspecialchars(strlen($movie['title']) > 20 ? substr($movie['title'], 0, 20) . '...' : $movie['title']) ?>
+                  <?= strlen($movie['title']) > 20 ? substr($movie['title'], 0, 20) . '...' : $movie['title'] ?>
                 </h3>
                 <p class="text-xs text-gray-500"><?= date('Y', strtotime($movie['release_date'])) ?></p>
               </a>
