@@ -87,4 +87,84 @@ class MovieService
     $rows = $stmt->fetchAll();
     return $this->formatMovies($rows);
   }
+
+  /**
+   * Fetch detailed movie information from TMDB API.
+   *
+   * @param int $id
+   * @return array
+   */
+  public function getMovieDetails($id)
+  {
+    $url = TMDB_BASE_URL . "/movie/{$id}?api_key=" . TMDB_API_KEY;
+    $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
+    if (!$response && function_exists('curl_version')) {
+      $ch = curl_init($url);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+      $response = curl_exec($ch);
+      curl_close($ch);
+    }
+    return $response ? json_decode($response, true) : [];
+  }
+
+  /**
+   * Fetch movie cast information from TMDB API.
+   *
+   * @param int $id
+   * @return array
+   */
+  public function getMovieCredits($id)
+  {
+    $url = TMDB_BASE_URL . "/movie/{$id}/credits?api_key=" . TMDB_API_KEY;
+    $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
+    if (!$response && function_exists('curl_version')) {
+      $ch = curl_init($url);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+      $response = curl_exec($ch);
+      curl_close($ch);
+    }
+    return $response ? json_decode($response, true) : [];
+  }
+
+  /**
+   * Fetch movie reviews from TMDB API.
+   *
+   * @param int $id
+   * @return array
+   */
+  public function getMovieReviews($id)
+  {
+    $url = TMDB_BASE_URL . "/movie/{$id}/reviews?api_key=" . TMDB_API_KEY;
+    $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
+    if (!$response && function_exists('curl_version')) {
+      $ch = curl_init($url);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+      $response = curl_exec($ch);
+      curl_close($ch);
+    }
+    return $response ? json_decode($response, true) : [];
+  }
+
+  /**
+   * Fetch similar movies from TMDB API.
+   *
+   * @param int $id
+   * @return array
+   */
+  public function getSimilarMovies($id)
+  {
+    $url = TMDB_BASE_URL . "/movie/{$id}/similar?api_key=" . TMDB_API_KEY;
+    $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
+    if (!$response && function_exists('curl_version')) {
+      $ch = curl_init($url);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+      $response = curl_exec($ch);
+      curl_close($ch);
+    }
+    return $response ? json_decode($response, true) : [];
+  }
 }
