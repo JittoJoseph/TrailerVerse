@@ -14,48 +14,37 @@ class MovieService
 
   public function getTrendingMovies()
   {
-    // Try API first
+    // Fetch latest trending from API and update cache
     $url = TMDB_BASE_URL . '/trending/movie/week?api_key=' . TMDB_API_KEY;
+    // Try file_get_contents
     $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
+    // Fallback to cURL if needed
+    if (!$response && function_exists('curl_version')) {
+      $ch = curl_init($url);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+      $response = curl_exec($ch);
+      curl_close($ch);
+    }
     if ($response) {
       $data = json_decode($response, true);
       if (!empty($data['results'])) {
-        // Store order in session
-        if (session_status() === PHP_SESSION_NONE) session_start();
-        $_SESSION['trending_ids'] = array_column($data['results'], 'id');
-        // Update cache
         $this->updateMovieCache($data['results']);
-        return $data;
       }
     }
-    // Fallback to cached data
-    $cached = $this->getCachedMovies();
-    $ids = $_SESSION['trending_ids'] ?? [];
-    if (!empty($ids) && !empty($cached['results'])) {
-      // Order by stored ids
-      $ordered = [];
-      foreach ($ids as $id) {
-        foreach ($cached['results'] as $movie) {
-          if ($movie['id'] == $id) {
-            $ordered[] = $movie;
-            break;
-          }
-        }
-      }
-      return ['results' => array_slice($ordered, 0, 20)];
-    }
-    return $cached;
+    // Return cached movies for display
+    return $this->getCachedMovies();
   }
 
   private function updateMovieCache($movies)
   {
     // Prepare insert statement with named placeholders
-    $sql = 'INSERT INTO movie_cache (movie_id, title, overview, poster_path, backdrop_path, release_date, vote_average, vote_count, cached_at)
-            VALUES (:id, :title, :overview, :poster, :backdrop, :release, :avg, :count, NOW())
+    $sql = 'INSERT INTO movie_cache (movie_id, title, overview, poster_path, backdrop_path, release_date, vote_average, vote_count, genre_ids, cached_at)
+            VALUES (:id, :title, :overview, :poster, :backdrop, :release, :avg, :count, :genres, NOW())
             ON DUPLICATE KEY UPDATE
               title = VALUES(title), overview = VALUES(overview), poster_path = VALUES(poster_path),
               backdrop_path = VALUES(backdrop_path), release_date = VALUES(release_date),
-              vote_average = VALUES(vote_average), vote_count = VALUES(vote_count), cached_at = NOW()';
+              vote_average = VALUES(vote_average), vote_count = VALUES(vote_count), genre_ids = VALUES(genre_ids), cached_at = NOW()';
     $stmt = $this->db->prepare($sql);
     foreach (array_slice($movies, 0, 20) as $movie) {
       $stmt->execute([
@@ -67,6 +56,7 @@ class MovieService
         ':release' => $movie['release_date'] ?? null,
         ':avg' => $movie['vote_average'] ?? 0,
         ':count' => $movie['vote_count'] ?? 0,
+        ':genres' => json_encode($movie['genre_ids'] ?? []),
       ]);
     }
   }
