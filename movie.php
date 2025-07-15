@@ -2,8 +2,39 @@
 require_once 'config/app.php';
 require_once 'config/tmdb_config.php';
 require_once 'services/MovieService.php';
+require_once 'config/database.php';
 
-// Validate movie ID
+$dbConn = (new Database())->connect();
+// Handle AJAX rating submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'rate') {
+  if (!isset($_SESSION['user_id'])) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Not logged in']);
+    exit;
+  }
+  $userId = (int)$_SESSION['user_id'];
+  $movieId = filter_input(INPUT_POST, 'movie_id', FILTER_VALIDATE_INT);
+  $rating = filter_input(INPUT_POST, 'rating', FILTER_VALIDATE_INT);
+  if (!$movieId || $rating < 1 || $rating > 5) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid data']);
+    exit;
+  }
+  $sql = 'INSERT INTO movie_ratings (user_id, movie_id, rating, created_at, updated_at) VALUES (:user, :movie, :rate, NOW(), NOW()) ON DUPLICATE KEY UPDATE rating = :rate, updated_at = NOW()';
+  $stmt = $dbConn->prepare($sql);
+  $stmt->execute([':user' => $userId, ':movie' => $movieId, ':rate' => $rating]);
+  echo json_encode(['success' => true]);
+  exit;
+}
+// Fetch current user rating
+$userRating = 0;
+if (isset($_SESSION['user_id'])) {
+  $uid = (int)$_SESSION['user_id'];
+  $mid = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+  $sr = $dbConn->prepare('SELECT rating FROM movie_ratings WHERE user_id=? AND movie_id=?');
+  $sr->execute([$uid, $mid]);
+  $userRating = (int)$sr->fetchColumn() ?: 0;
+}
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$id) {
   header('Location: index.php');
@@ -12,9 +43,7 @@ if (!$id) {
 
 $movieService = new MovieService();
 $movie = $movieService->getMovieDetails($id);
-$credits = $movieService->getMovieCredits($id);
-$similar = $movieService->getSimilarMovies($id); // assume new method
-$cast = $credits['cast'] ?? [];
+$similar = $movieService->getSimilarMovies($id);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -24,11 +53,11 @@ $cast = $credits['cast'] ?? [];
   <?php include 'includes/head.php'; ?>
 </head>
 
-<body class="bg-black text-white overflow-x-hidden">
+<body class="bg-black text-white overflow-x-hidden overflow-y-auto">
   <?php include 'includes/header_detail.php'; ?>
 
   <!-- Fullscreen Backdrop Section -->
-  <section class="absolute top-0 left-0 h-screen w-full">
+  <section class="relative h-screen w-full">
     <img src="<?= getTMDBBackdropUrl($movie['backdrop_path'] ?? '') ?>" alt="" class="absolute top-0 left-0 w-full h-full object-cover">
     <div class="absolute inset-0 bg-black bg-opacity-50"></div>
     <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black"></div>
@@ -56,7 +85,6 @@ $cast = $credits['cast'] ?? [];
   <div class="max-w-7xl mx-auto px-6 py-12">
     <ul id="tabs" class="flex space-x-8 border-b border-gray-700">
       <li><button data-tab="details" class="pb-2 text-lg text-white border-b-2 border-transparent hover:border-white">Details</button></li>
-      <li><button data-tab="cast" class="pb-2 text-lg text-gray-400 hover:text-white hover:border-white">Cast</button></li>
       <li><button data-tab="similar" class="pb-2 text-lg text-gray-400 hover:text-white hover:border-white">Similar Movies</button></li>
     </ul>
     <div id="details" class="tab-content pt-8">
@@ -73,17 +101,6 @@ $cast = $credits['cast'] ?? [];
         </div>
       </div>
     </div>
-    <div id="cast" class="tab-content hidden pt-8">
-      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-6">
-        <?php foreach (array_slice($cast, 0, 12) as $c): ?>
-          <div class="text-center">
-            <img src="<?= getTMDBImageUrl($c['profile_path'], 'w185') ?>" alt="" class="w-full h-48 object-cover rounded-lg mb-2">
-            <div class="font-medium"><?= htmlspecialchars($c['name']) ?></div>
-            <div class="text-gray-400 text-sm"><?= htmlspecialchars($c['character']) ?></div>
-          </div>
-        <?php endforeach; ?>
-      </div>
-    </div>
     <div id="similar" class="tab-content hidden pt-8">
       <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
         <?php foreach (array_slice($similar['results'] ?? [], 0, 12) as $s): ?>
@@ -94,12 +111,54 @@ $cast = $credits['cast'] ?? [];
         <?php endforeach; ?>
       </div>
     </div>
+    <!-- Inject 5-star rating in Details via JS -->
   </div>
 
   <?php include 'includes/footer.php'; ?>
 
   <script>
-
+    // Tab switching
+    document.querySelectorAll('[data-tab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        document.getElementById(btn.getAttribute('data-tab')).classList.remove('hidden');
+        document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('text-white', 'border-white'));
+        btn.classList.add('text-white', 'border-white');
+      });
+    });
+    // Inject 5-star rating under Details
+    document.addEventListener('DOMContentLoaded', function() {
+      const detailsTab = document.getElementById('details');
+      const ratingDiv = document.createElement('div');
+      ratingDiv.className = 'mt-6 flex items-center space-x-2';
+      ratingDiv.innerHTML = '<span class="text-white font-medium">Your Rating:</span>' +
+        Array.from({
+            length: 5
+          }, (_, i) =>
+          `<i class="fa-star ${i<<?= $userRating ?>?'fas':'far'} cursor-pointer text-yellow-400 rating-star" data-value="${i+1}"></i>`
+        ).join('');
+      detailsTab.appendChild(ratingDiv);
+      const stars = ratingDiv.querySelectorAll('.rating-star');
+      stars.forEach(star => {
+        star.addEventListener('click', function() {
+          const val = this.getAttribute('data-value');
+          fetch('', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `action=rate&movie_id=<?= $id ?>&rating=${val}`
+          }).then(res => res.json()).then(data => {
+            if (data.success) {
+              stars.forEach(s => {
+                s.classList.toggle('fas', s.getAttribute('data-value') <= val);
+                s.classList.toggle('far', s.getAttribute('data-value') > val);
+              });
+            }
+          });
+        });
+      });
+    });
   </script>
 </body>
 
