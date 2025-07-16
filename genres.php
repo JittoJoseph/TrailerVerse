@@ -41,7 +41,7 @@ $genres = $genreService->getGenres();
         <?php foreach ($genres as $index => $genre):
           $grad = $gradients[$index % count($gradients)];
         ?>
-          <a href="movies.php?genre_id=<?= $genre['id'] ?>"
+         <a href="genre-movies.php?id=<?= $genre['id'] ?>"
             class="flex items-center justify-center rounded-lg h-48 bg-gradient-to-r <?= $grad ?> hover:scale-105 transition-transform">
             <h3 class="text-2xl font-bold text-white text-center px-4"><?= htmlspecialchars($genre['name']) ?></h3>
           </a>
