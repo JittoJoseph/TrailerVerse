@@ -187,24 +187,19 @@ class MovieService
    * @param int $id
    * @return array
    */
-  public function getSimilarMovies($id)
-  {
-    $url = TMDB_BASE_URL . "/movie/{$id}/similar?api_key=" . TMDB_API_KEY;
-    $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
-    if (!$response && function_exists('curl_version')) {
-      $ch = curl_init($url);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-      curl_setopt($ch, CURLOPT_TIMEOUT, 3);
-      $response = curl_exec($ch);
-      curl_close($ch);
-    }
-    if ($response) {
-      $data = json_decode($response, true);
-      if (!empty($data['results'])) {
-        return $data;
-      }
-    }
-    // Fallback to trending cache if similar API fails
-    return $this->getCachedMovies();
+  public function getMoviesByGenre($genreId)
+{
+  $url = TMDB_BASE_URL . "/discover/movie?api_key=" . TMDB_API_KEY . "&with_genres={$genreId}&sort_by=popularity.desc";
+  $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
+
+  if (!$response && function_exists('curl_version')) {
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+    $response = curl_exec($ch);
+    curl_close($ch);
   }
+
+  return $response ? json_decode($response, true) : ['results' => []];
+}
 }
