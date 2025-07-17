@@ -78,8 +78,8 @@ if (isset($_SESSION['user_id'])) {
   <!-- Details Tabs -->
   <div class="max-w-7xl mx-auto px-6 py-12">
     <ul id="tabs" class="flex space-x-8 border-b border-gray-700">
-      <li><button data-tab="details" class="pb-2 text-lg text-white border-b-2 border-transparent hover:border-white">Details</button></li>
-      <li><button data-tab="reviews" class="pb-2 text-lg text-gray-400 hover:text-white hover:border-white">Reviews</button></li>
+      <li><button data-tab="details" class="pb-2 text-lg text-white border-b-2 border-white hover:border-white">Details</button></li>
+      <li><button data-tab="reviews" class="pb-2 text-lg text-gray-400 border-b-2 border-transparent hover:text-white hover:border-white">Reviews</button></li>
     </ul>
     <div id="details" class="tab-content pt-8">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -119,7 +119,7 @@ if (isset($_SESSION['user_id'])) {
         <?php foreach ($reviews as $r): ?>
           <div class="bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-inner">
             <div class="flex items-center justify-between text-sm text-gray-400 mb-2">
-              <span><?= htmlspecialchars($r['username']) ?></span>
+              <span>@<?= htmlspecialchars($r['username']) ?></span>
               <span><?= date('M j, Y H:i', strtotime($r['created_at'])) ?></span>
             </div>
             <p class="text-gray-100 leading-relaxed whitespace-pre-wrap"><?= htmlspecialchars($r['review_text']) ?></p>
@@ -133,11 +133,16 @@ if (isset($_SESSION['user_id'])) {
 
   <script>
     // Tab switching
-    document.querySelectorAll('[data-tab]').forEach(btn => {
+    const tabs = document.querySelectorAll('[data-tab]');
+    tabs.forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
         document.getElementById(btn.getAttribute('data-tab')).classList.remove('hidden');
-        document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('text-white', 'border-white'));
+        tabs.forEach(b => {
+          b.classList.remove('text-white', 'border-white');
+          b.classList.add('text-gray-400', 'border-transparent');
+        });
+        btn.classList.remove('text-gray-400', 'border-transparent');
         btn.classList.add('text-white', 'border-white');
       });
     });
@@ -230,9 +235,15 @@ if (isset($_SESSION['user_id'])) {
           const list = document.getElementById('reviews-list');
           list.innerHTML = '';
           data.reviews.forEach(r => {
-            const div = document.createElement('div');
-            div.className = 'p-4 bg-gray-900 rounded';
-            div.innerHTML = `<div class="text-sm text-gray-400">${r.username} • ${new Date(r.created_at).toLocaleString()}</div><p class="mt-2 text-white">${r.review_text.replace(/\n/g, '<br>')}</p>`;
+          const div = document.createElement('div');
+          div.className = 'bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-inner';
+          div.innerHTML = `
+            <div class="flex items-center justify-between text-sm text-gray-400 mb-2">
+              <span>@${r.username}</span>
+              <span>${new Date(r.created_at).toLocaleString()}</span>
+            </div>
+            <p class="text-gray-100 leading-relaxed whitespace-pre-wrap">${r.review_text.replace(/\n/g, '<br>')}</p>
+          `;
             list.appendChild(div);
           });
           document.getElementById('review-textarea').value = '';
