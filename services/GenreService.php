@@ -38,6 +38,9 @@ class GenreService
     if ($response) {
       $data = json_decode($response, true);
       $apiGenres = $data['genres'] ?? [];
+      $apiGenres = array_filter($apiGenres, function ($g) {
+        return !in_array($g['id'], [10749, 18, 14, 9648]);
+      });
       if (!empty($apiGenres)) {
         $this->cacheGenres($apiGenres);
       }

@@ -88,12 +88,25 @@ class MovieService
     $rows = $stmt->fetchAll();
     return $this->formatMovies($rows);
   }
+
   /**
-   * Fetch detailed movie information from cache when API fails.
+   * Fetch cached movies for a specific genre and format them.
+   * Uses JSON_CONTAINS on the genre_ids JSON column.
    *
-   * @param int $id
-   * @return array|null
+   * @param int $genreId
+   * @return array
    */
+  private function getCachedMoviesByGenre(int $genreId)
+  {
+    // Use JSON_CONTAINS to find numeric genre ID in JSON array (MariaDB/MySQL syntax)
+    // Cast :id to integer for JSON_CONTAINS to match stored genre_ids type
+    $sql = 'SELECT * FROM movie_cache WHERE JSON_CONTAINS(genre_ids, JSON_ARRAY(CAST(:id AS UNSIGNED))) ORDER BY cached_at DESC LIMIT 20';
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':id' => $genreId]);
+    $rows = $stmt->fetchAll();
+    return $this->formatMovies($rows);
+  }
+
   private function getCachedMovieDetails($id)
   {
     $stmt = $this->db->prepare('SELECT * FROM movie_cache WHERE movie_id = ?');
@@ -124,11 +137,6 @@ class MovieService
       'genres' => $genres
     ];
   }
-  /**
-   * Cache detailed movie information after API fetch.
-   *
-   * @param array $movie
-   */
   private function updateMovieDetailCache(array $movie)
   {
     $sql = 'INSERT INTO movie_cache (movie_id, title, overview, poster_path, backdrop_path, release_date, runtime, vote_average, vote_count, genre_ids, cached_at)
@@ -152,13 +160,6 @@ class MovieService
       ':genres' => json_encode($genreIds),
     ]);
   }
-
-  /**
-   * Fetch detailed movie information from TMDB API.
-   *
-   * @param int $id
-   * @return array
-   */
   public function getMovieDetails($id)
   {
     $url = TMDB_BASE_URL . "/movie/{$id}?api_key=" . TMDB_API_KEY;
@@ -181,25 +182,27 @@ class MovieService
     return $cached ? $cached : [];
   }
 
-  /**
-   * Fetch similar movies from TMDB API.
-   *
-   * @param int $id
-   * @return array
-   */
   public function getMoviesByGenre($genreId)
-{
-  $url = TMDB_BASE_URL . "/discover/movie?api_key=" . TMDB_API_KEY . "&with_genres={$genreId}&sort_by=popularity.desc";
-  $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
-
-  if (!$response && function_exists('curl_version')) {
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 3);
-    $response = curl_exec($ch);
-    curl_close($ch);
+  {
+    // Always show cached movies first
+    $cached = $this->getCachedMoviesByGenre($genreId);
+    // Try to update cache in background
+    $url = TMDB_BASE_URL . "/discover/movie?api_key=" . TMDB_API_KEY . "&with_genres={$genreId}&sort_by=popularity.desc&include_adult=false";
+    $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
+    if (!$response && function_exists('curl_version')) {
+      $ch = curl_init($url);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+      $response = curl_exec($ch);
+      curl_close($ch);
+    }
+    if ($response) {
+      $data = json_decode($response, true) ?: ['results' => []];
+      if (!empty($data['results'])) {
+        $this->updateMovieCache($data['results']);
+      }
+    }
+    // Always return cached movies for display
+    return $cached;
   }
-
-  return $response ? json_decode($response, true) : ['results' => []];
-}
 }
