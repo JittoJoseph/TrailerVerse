@@ -89,6 +89,23 @@ class MovieService
     return $this->formatMovies($rows);
   }
 
+  /**
+   * Fetch cached movies for a specific genre and format them.
+   * Uses JSON_CONTAINS on the genre_ids JSON column.
+   *
+   * @param int $genreId
+   * @return array
+   */
+  private function getCachedMoviesByGenre(int $genreId)
+  {
+    // Use JSON_CONTAINS to find numeric genre ID in JSON array (MariaDB/MySQL syntax)
+    $sql = 'SELECT * FROM movie_cache WHERE JSON_CONTAINS(genre_ids, JSON_ARRAY(:id)) ORDER BY cached_at DESC LIMIT 20';
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':id' => $genreId]);
+    $rows = $stmt->fetchAll();
+    return $this->formatMovies($rows);
+  }
+
   private function getCachedMovieDetails($id)
   {
     $stmt = $this->db->prepare('SELECT * FROM movie_cache WHERE movie_id = ?');
@@ -167,8 +184,9 @@ class MovieService
   public function getMoviesByGenre($genreId)
   {
     $url = TMDB_BASE_URL . "/discover/movie?api_key=" . TMDB_API_KEY . "&with_genres={$genreId}&sort_by=popularity.desc";
+    // Try file_get_contents
     $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
-
+    // Fallback to cURL if file_get_contents fails
     if (!$response && function_exists('curl_version')) {
       $ch = curl_init($url);
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -176,7 +194,13 @@ class MovieService
       $response = curl_exec($ch);
       curl_close($ch);
     }
-
-    return $response ? json_decode($response, true) : ['results' => []];
+    if ($response) {
+      $data = json_decode($response, true) ?: ['results' => []];
+      if (!empty($data['results'])) {
+        $this->updateMovieCache($data['results']);
+      }
+      return $data;
+    }
+    return $this->getCachedMoviesByGenre($genreId);
   }
 }
