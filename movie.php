@@ -21,8 +21,6 @@ if (!$id) {
 }
 $movieService = new MovieService();
 $movie = $movieService->getMovieDetails($id);
-// Fetch similar movies
-$similar = $movieService->getSimilarMovies($id);
 $reviewService = new MovieReviewService($dbConn);
 $reviews = $reviewService->getReviews($id);
 
@@ -81,7 +79,6 @@ if (isset($_SESSION['user_id'])) {
   <div class="max-w-7xl mx-auto px-6 py-12">
     <ul id="tabs" class="flex space-x-8 border-b border-gray-700">
       <li><button data-tab="details" class="pb-2 text-lg text-white border-b-2 border-transparent hover:border-white">Details</button></li>
-      <li><button data-tab="similar" class="pb-2 text-lg text-gray-400 hover:text-white hover:border-white">Similar Movies</button></li>
       <li><button data-tab="reviews" class="pb-2 text-lg text-gray-400 hover:text-white hover:border-white">Reviews</button></li>
     </ul>
     <div id="details" class="tab-content pt-8">
@@ -107,16 +104,6 @@ if (isset($_SESSION['user_id'])) {
         <?php else: ?>
           <a href="auth/signin.php" class="text-blue-400 hover:underline">Sign in to rate</a>
         <?php endif; ?>
-      </div>
-    </div>
-    <div id="similar" class="tab-content hidden pt-8">
-      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-        <?php foreach (array_slice($similar['results'] ?? [], 0, 12) as $s): ?>
-          <a href="movie.php?id=<?= $s['id'] ?>" class="block">
-            <img src="<?= getTMDBPosterUrl($s['poster_path']) ?>" alt="" class="w-full h-48 object-cover rounded-lg">
-            <h3 class="mt-2 text-sm font-medium hover:text-gray-200"><?= htmlspecialchars($s['title']) ?></h3>
-          </a>
-        <?php endforeach; ?>
       </div>
     </div>
     <div id="reviews" class="tab-content hidden pt-8">

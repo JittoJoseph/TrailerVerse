@@ -179,17 +179,4 @@ class MovieService
 
     return $response ? json_decode($response, true) : ['results' => []];
   }
-  public function getSimilarMovies($id)
-  {
-    $url = TMDB_BASE_URL . "/movie/{$id}/similar?api_key=" . TMDB_API_KEY;
-    $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
-    if (!$response && function_exists('curl_version')) {
-      $ch = curl_init($url);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-      curl_setopt($ch, CURLOPT_TIMEOUT, 3);
-      $response = curl_exec($ch);
-      curl_close($ch);
-    }
-    return $response ? json_decode($response, true) : ['results' => []];
-  }
 }
