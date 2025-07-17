@@ -235,9 +235,9 @@ if (isset($_SESSION['user_id'])) {
           const list = document.getElementById('reviews-list');
           list.innerHTML = '';
           data.reviews.forEach(r => {
-          const div = document.createElement('div');
-          div.className = 'bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-inner';
-          div.innerHTML = `
+            const div = document.createElement('div');
+            div.className = 'bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-inner';
+            div.innerHTML = `
             <div class="flex items-center justify-between text-sm text-gray-400 mb-2">
               <span>@${r.username}</span>
               <span>${new Date(r.created_at).toLocaleString()}</span>
