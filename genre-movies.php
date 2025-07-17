@@ -24,10 +24,12 @@ if ($genreId) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <title><?= htmlspecialchars($genreName ?: 'Genre') ?> Movies - TrailerVerse</title>
   <?php include 'includes/head.php'; ?>
 </head>
+
 <body class="bg-slate-950 text-white min-h-screen">
   <?php include 'includes/header.php'; ?>
 
@@ -40,15 +42,25 @@ if ($genreId) {
     <?php if (!empty($movies['results'])): ?>
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
         <?php foreach ($movies['results'] as $movie): ?>
-          <div class="bg-slate-800 rounded-lg overflow-hidden shadow hover:shadow-xl transition">
-            <img src="https://image.tmdb.org/t/p/w500<?= $movie['poster_path'] ?>" 
-                 alt="<?= htmlspecialchars($movie['title']) ?>" 
-                 class="w-full h-72 object-cover">
-            <div class="p-4">
-              <h3 class="text-base font-semibold"><?= htmlspecialchars($movie['title']) ?></h3>
-              <p class="text-sm text-yellow-400">⭐ <?= $movie['vote_average'] ?>/10</p>
+          <a href="movie.php?id=<?= htmlspecialchars($movie['id']) ?>" class="group cursor-pointer">
+            <div class="relative rounded-lg overflow-hidden mb-3">
+              <img src="<?= getTMDBPosterUrl($movie['poster_path']) ?>"
+                alt="<?= htmlspecialchars($movie['title']) ?>"
+                class="w-full h-72 object-cover transition-transform group-hover:scale-105">
+              <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <button class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center glass">
+                  <i class="fas fa-play text-white"></i>
+                </button>
+              </div>
+              <div class="absolute top-2 right-2 glass px-2 py-1 rounded text-xs">
+                <?= number_format($movie['vote_average'], 1) ?>
+              </div>
             </div>
-          </div>
+            <h3 class="text-sm font-medium group-hover:text-gray-300 transition-colors">
+              <?= strlen($movie['title']) > 20 ? substr($movie['title'], 0, 20) . '...' : htmlspecialchars($movie['title']) ?>
+            </h3>
+            <p class="text-xs text-gray-500"><?= date('Y', strtotime($movie['release_date'] ?? '')) ?></p>
+          </a>
         <?php endforeach; ?>
       </div>
     <?php else: ?>
@@ -58,4 +70,5 @@ if ($genreId) {
 
   <?php include 'includes/footer.php'; ?>
 </body>
+
 </html>

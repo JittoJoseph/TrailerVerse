@@ -2,48 +2,38 @@
 require_once 'config/app.php';
 require_once 'config/tmdb_config.php';
 require_once 'services/MovieService.php';
+require_once 'services/MovieStatusService.php';
+require_once 'services/MovieReviewService.php';
 require_once 'config/database.php';
 
 $dbConn = (new Database())->connect();
-// Handle AJAX rating submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'rate') {
-  if (!isset($_SESSION['user_id'])) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Not logged in']);
-    exit;
-  }
-  $userId = (int)$_SESSION['user_id'];
-  $movieId = filter_input(INPUT_POST, 'movie_id', FILTER_VALIDATE_INT);
-  $rating = filter_input(INPUT_POST, 'rating', FILTER_VALIDATE_INT);
-  if (!$movieId || $rating < 1 || $rating > 5) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid data']);
-    exit;
-  }
-  $sql = 'INSERT INTO movie_ratings (user_id, movie_id, rating, created_at, updated_at) VALUES (:user, :movie, :rate, NOW(), NOW()) ON DUPLICATE KEY UPDATE rating = :rate, updated_at = NOW()';
-  $stmt = $dbConn->prepare($sql);
-  $stmt->execute([':user' => $userId, ':movie' => $movieId, ':rate' => $rating]);
-  echo json_encode(['success' => true]);
-  exit;
-}
-// Fetch current user rating
-$userRating = 0;
-if (isset($_SESSION['user_id'])) {
-  $uid = (int)$_SESSION['user_id'];
-  $mid = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-  $sr = $dbConn->prepare('SELECT rating FROM movie_ratings WHERE user_id=? AND movie_id=?');
-  $sr->execute([$uid, $mid]);
-  $userRating = (int)$sr->fetchColumn() ?: 0;
-}
+// Delegate AJAX POST actions to the services
+MovieStatusService::handleAjax($dbConn);
+MovieReviewService::handleAjax($dbConn);
+
+// Instantiate status service for rendering the page
+$movieStatusService = new MovieStatusService($dbConn);
+// Fetch movie and user-specific status/rating via service
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 if (!$id) {
   header('Location: index.php');
   exit;
 }
-
 $movieService = new MovieService();
 $movie = $movieService->getMovieDetails($id);
-$similar = $movieService->getSimilarMovies($id);
+$reviewService = new MovieReviewService($dbConn);
+$reviews = $reviewService->getReviews($id);
+
+$inWatchlist = false;
+$watched     = false;
+$userRating  = 0;
+if (isset($_SESSION['user_id'])) {
+  $uid = (int)$_SESSION['user_id'];
+  $statusArr = $movieStatusService->getStatus($uid, $id);
+  $inWatchlist = $statusArr['inWatchlist'];
+  $watched     = $statusArr['watched'];
+  $userRating  = $statusArr['rating'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,13 +59,17 @@ $similar = $movieService->getSimilarMovies($id);
     <div class="absolute bottom-0 left-0 p-8 max-w-2xl space-y-4 z-20">
       <h1 class="text-6xl font-bold gradient-text"><?= htmlspecialchars($movie['title'] ?? '') ?></h1>
       <p class="text-gray-300 max-w-lg leading-relaxed"><?= htmlspecialchars($movie['overview'] ?? '') ?></p>
-      <div class="flex space-x-4">
-        <button class="flex items-center px-6 py-3 bg-white text-black rounded-md hover:bg-gray-100 transition">
-          <i class="fas fa-play mr-2"></i> Play Trailer
-        </button>
-        <button class="flex items-center px-6 py-3 glass rounded-md hover:bg-white/10 transition">
-          <i class="fas fa-plus mr-2"></i> My List
-        </button>
+      <div class="mt-4 flex space-x-4">
+        <?php if (isset($_SESSION['user_id'])): ?>
+          <button id="btn-watchlist" class="flex items-center px-4 py-2 <?php echo $inWatchlist ? 'bg-red-600' : 'bg-white text-black'; ?> rounded-md hover:opacity-90 transition">
+            <i class="fas fa-list mr-2"></i><?= $inWatchlist ? 'Remove from List' : 'Add to Watchlist' ?>
+          </button>
+          <button id="btn-watched" class="flex items-center px-4 py-2 <?php echo $watched ? 'bg-green-600' : 'glass'; ?> rounded-md hover:opacity-90 transition">
+            <i class="fas fa-check mr-2"></i><?= $watched ? 'Unmark Watched' : 'Mark as Watched' ?>
+          </button>
+        <?php else: ?>
+          <a href="auth/signin.php" class="px-4 py-2 bg-blue-500 rounded-md hover:opacity-90 transition">Sign in to manage list</a>
+        <?php endif; ?>
       </div>
     </div>
     <div class="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-black to-transparent"></div>
@@ -84,8 +78,8 @@ $similar = $movieService->getSimilarMovies($id);
   <!-- Details Tabs -->
   <div class="max-w-7xl mx-auto px-6 py-12">
     <ul id="tabs" class="flex space-x-8 border-b border-gray-700">
-      <li><button data-tab="details" class="pb-2 text-lg text-white border-b-2 border-transparent hover:border-white">Details</button></li>
-      <li><button data-tab="similar" class="pb-2 text-lg text-gray-400 hover:text-white hover:border-white">Similar Movies</button></li>
+      <li><button data-tab="details" class="pb-2 text-lg text-white border-b-2 border-white hover:border-white">Details</button></li>
+      <li><button data-tab="reviews" class="pb-2 text-lg text-gray-400 border-b-2 border-transparent hover:text-white hover:border-white">Reviews</button></li>
     </ul>
     <div id="details" class="tab-content pt-8">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -99,65 +93,164 @@ $similar = $movieService->getSimilarMovies($id);
           <h2 class="text-2xl font-semibold mb-4">Overview</h2>
           <p class="text-gray-300 leading-relaxed"><?= nl2br(htmlspecialchars($movie['overview'] ?? '')) ?></p>
         </div>
+      </div> <!-- end details grid -->
+      <!-- User rating section -->
+      <div id="user-rating" class="mt-6 flex items-center space-x-2">
+        <span class="text-white font-medium">Rate this movie:</span>
+        <?php if (isset($_SESSION['user_id'])): ?>
+          <?php for ($i = 1; $i <= 5; $i++): ?>
+            <i class="rating-star <?php echo ($i <= $userRating ? 'fas' : 'far'); ?> fa-star cursor-pointer text-yellow-400 text-2xl hover:text-yellow-300" data-value="<?= $i ?>"></i>
+          <?php endfor; ?>
+        <?php else: ?>
+          <a href="auth/signin.php" class="text-blue-400 hover:underline">Sign in to rate</a>
+        <?php endif; ?>
       </div>
     </div>
-    <div id="similar" class="tab-content hidden pt-8">
-      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-        <?php foreach (array_slice($similar['results'] ?? [], 0, 12) as $s): ?>
-          <a href="movie.php?id=<?= $s['id'] ?>" class="block">
-            <img src="<?= getTMDBPosterUrl($s['poster_path']) ?>" alt="" class="w-full h-48 object-cover rounded-lg">
-            <h3 class="mt-2 text-sm font-medium hover:text-gray-200"><?= htmlspecialchars($s['title']) ?></h3>
-          </a>
+    <div id="reviews" class="tab-content hidden pt-8">
+      <div class="bg-gray-800 p-6 rounded-lg space-y-4">
+        <?php if (isset($_SESSION['user_id'])): ?>
+          <textarea id="review-textarea" rows="4" class="w-full p-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Share your thoughts..."></textarea>
+          <button id="btn-submit-review" class="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-lg transition">Post Review</button>
+        <?php else: ?>
+          <a href="auth/signin.php" class="inline-block text-blue-400 hover:underline">Sign in to write a review</a>
+        <?php endif; ?>
+      </div>
+      <div id="reviews-list" class="mt-6 space-y-6">
+        <?php foreach ($reviews as $r): ?>
+          <div class="bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-inner">
+            <div class="flex items-center justify-between text-sm text-gray-400 mb-2">
+              <span>@<?= htmlspecialchars($r['username']) ?></span>
+              <span><?= date('M j, Y H:i', strtotime($r['created_at'])) ?></span>
+            </div>
+            <p class="text-gray-100 leading-relaxed whitespace-pre-wrap"><?= htmlspecialchars($r['review_text']) ?></p>
+          </div>
         <?php endforeach; ?>
       </div>
     </div>
-    <!-- Inject 5-star rating in Details via JS -->
   </div>
 
   <?php include 'includes/footer.php'; ?>
 
   <script>
     // Tab switching
-    document.querySelectorAll('[data-tab]').forEach(btn => {
+    const tabs = document.querySelectorAll('[data-tab]');
+    tabs.forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
         document.getElementById(btn.getAttribute('data-tab')).classList.remove('hidden');
-        document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('text-white', 'border-white'));
+        tabs.forEach(b => {
+          b.classList.remove('text-white', 'border-white');
+          b.classList.add('text-gray-400', 'border-transparent');
+        });
+        btn.classList.remove('text-gray-400', 'border-transparent');
         btn.classList.add('text-white', 'border-white');
       });
     });
-    // Inject 5-star rating under Details
-    document.addEventListener('DOMContentLoaded', function() {
-      const detailsTab = document.getElementById('details');
-      const ratingDiv = document.createElement('div');
-      ratingDiv.className = 'mt-6 flex items-center space-x-2';
-      ratingDiv.innerHTML = '<span class="text-white font-medium">Your Rating:</span>' +
-        Array.from({
-            length: 5
-          }, (_, i) =>
-          `<i class="fa-star ${i<<?= $userRating ?>?'fas':'far'} cursor-pointer text-yellow-400 rating-star" data-value="${i+1}"></i>`
-        ).join('');
-      detailsTab.appendChild(ratingDiv);
-      const stars = ratingDiv.querySelectorAll('.rating-star');
-      stars.forEach(star => {
-        star.addEventListener('click', function() {
-          const val = this.getAttribute('data-value');
-          fetch('', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: `action=rate&movie_id=<?= $id ?>&rating=${val}`
-          }).then(res => res.json()).then(data => {
-            if (data.success) {
-              stars.forEach(s => {
-                s.classList.toggle('fas', s.getAttribute('data-value') <= val);
-                s.classList.toggle('far', s.getAttribute('data-value') > val);
-              });
-            }
+    // Rating click handler (event delegation)
+    document.getElementById('user-rating')?.addEventListener('click', function(e) {
+      const star = e.target.closest('.rating-star');
+      if (!star) return;
+      const val = star.getAttribute('data-value');
+      fetch('', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `action=rate&movie_id=<?= $id ?>&rating=${val}`
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+          // Update star display
+          this.querySelectorAll('.rating-star').forEach(s => {
+            const v = s.getAttribute('data-value');
+            s.classList.toggle('fas', v <= val);
+            s.classList.toggle('far', v > val);
           });
-        });
+          // Update watched button state
+          const watchedBtn = document.getElementById('btn-watched');
+          if (watchedBtn) {
+            if (data.watched) {
+              watchedBtn.classList.remove('glass');
+              watchedBtn.classList.add('bg-green-600');
+              watchedBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Unmark Watched';
+            } else {
+              watchedBtn.classList.remove('bg-green-600');
+              watchedBtn.classList.add('glass');
+              watchedBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Mark as Watched';
+            }
+          }
+          // Update watchlist button state
+          const watchlistBtn = document.getElementById('btn-watchlist');
+          if (watchlistBtn) {
+            if (data.inWatchlist) {
+              watchlistBtn.classList.remove('bg-white', 'text-black');
+              watchlistBtn.classList.add('bg-red-600');
+              watchlistBtn.innerHTML = '<i class="fas fa-list mr-2"></i>Remove from List';
+            } else {
+              watchlistBtn.classList.remove('bg-red-600');
+              watchlistBtn.classList.add('bg-white', 'text-black');
+              watchlistBtn.innerHTML = '<i class="fas fa-list mr-2"></i>Add to Watchlist';
+            }
+          }
+        } else if (data.error) {
+          alert(data.error);
+        }
+      }).catch(() => alert('Failed to save rating'));
+    });
+    // Watchlist toggle
+    document.getElementById('btn-watchlist')?.addEventListener('click', function() {
+      fetch('', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `action=watchlist&movie_id=<?= $id ?>`
+      }).then(r => r.json()).then(d => {
+        if (d.success) location.reload();
       });
+    });
+    // Watched toggle
+    document.getElementById('btn-watched')?.addEventListener('click', function() {
+      fetch('', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `action=watched&movie_id=<?= $id ?>`
+      }).then(r => r.json()).then(d => {
+        if (d.success) location.reload();
+      });
+    });
+    // Review submission
+    document.getElementById('btn-submit-review')?.addEventListener('click', function() {
+      const text = document.getElementById('review-textarea').value;
+      console.log('Submitting review:', text);
+      fetch(window.location.href, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `action=review&movie_id=<?= $id ?>&review_text=${encodeURIComponent(text)}`
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+          const list = document.getElementById('reviews-list');
+          list.innerHTML = '';
+          data.reviews.forEach(r => {
+            const div = document.createElement('div');
+            div.className = 'bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-inner';
+            div.innerHTML = `
+            <div class="flex items-center justify-between text-sm text-gray-400 mb-2">
+              <span>@${r.username}</span>
+              <span>${new Date(r.created_at).toLocaleString()}</span>
+            </div>
+            <p class="text-gray-100 leading-relaxed whitespace-pre-wrap">${r.review_text.replace(/\n/g, '<br>')}</p>
+          `;
+            list.appendChild(div);
+          });
+          document.getElementById('review-textarea').value = '';
+        } else {
+          alert(data.error || 'Failed to submit review');
+        }
+      }).catch(() => alert('Failed to submit review'));
     });
   </script>
 </body>
