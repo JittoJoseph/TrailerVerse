@@ -113,40 +113,90 @@ $followingCount = $userService->getFollowingCount($userId);
 
               <!-- Profile Info -->
               <div class="flex-1 text-white">
-                <h1 class="text-4xl md:text-5xl font-bold mb-2"><?= htmlspecialchars($user['username']) ?></h1>
-                <p class="text-xl text-gray-200 mb-3"><?= htmlspecialchars($user['bio'] ?: 'Movie enthusiast exploring cinematic worlds') ?></p>
+                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div class="flex-1">
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2"><?= htmlspecialchars($user['username']) ?></h1>
+                    <p class="text-base sm:text-lg lg:text-xl text-gray-200 mb-4 max-w-2xl"><?= htmlspecialchars($user['bio'] ?: 'Movie enthusiast exploring cinematic worlds') ?></p>
 
-                <!-- Quick Stats Row -->
-                <div class="flex items-center space-x-6 text-sm">
-                  <div class="flex items-center space-x-2">
-                    <i class="fas fa-calendar text-gray-300"></i>
-                    <span>Member since <?= date('M Y', strtotime($user['created_at'])) ?></span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <i class="fas fa-users text-gray-300"></i>
-                    <span><?= $followersCount ?> followers</span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <i class="fas fa-user-friends text-gray-300"></i>
-                    <span><?= $followingCount ?> following</span>
-                  </div>
-                  <?php if ($stats['favorite_genre_name']): ?>
-                    <div class="flex items-center space-x-2">
-                      <i class="fas fa-heart text-red-400"></i>
-                      <span><?= htmlspecialchars($stats['favorite_genre_name']) ?> lover</span>
+                    <!-- Badges Row -->
+                    <div class="flex flex-wrap items-center gap-3 mb-4">
+                      <!-- Favorite Genre or New User Badge -->
+                      <?php if ($stats['favorite_genre_name']): ?>
+                        <span class="px-3 py-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-sm font-medium rounded-full flex items-center space-x-2 shadow-lg">
+                          <i class="fas fa-heart text-xs"></i>
+                          <span>Favorite: <?= htmlspecialchars($stats['favorite_genre_name']) ?></span>
+                        </span>
+                      <?php else: ?>
+                        <span class="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-medium rounded-full flex items-center space-x-2 shadow-lg">
+                          <i class="fas fa-star text-xs"></i>
+                          <span>New User</span>
+                        </span>
+                      <?php endif; ?>
+
+                      <!-- Profile Status Badge -->
+                      <span class="px-3 py-1.5 bg-gray-700 bg-opacity-80 text-gray-200 text-sm font-medium rounded-full flex items-center space-x-2">
+                        <i class="fas fa-<?= $user['is_public'] ? 'globe' : 'lock' ?> text-xs"></i>
+                        <span><?= $user['is_public'] ? 'Public Profile' : 'Private Profile' ?></span>
+                      </span>
+
+                      <!-- Member Since Badge -->
+                      <span class="px-3 py-1.5 bg-gray-700 bg-opacity-80 text-gray-200 text-sm font-medium rounded-full flex items-center space-x-2">
+                        <i class="fas fa-calendar text-xs"></i>
+                        <span>Since <?= date('M Y', strtotime($user['created_at'])) ?></span>
+                      </span>
                     </div>
-                  <?php endif; ?>
-                </div>
-              </div>
 
-              <!-- Action Buttons -->
-              <div class="flex space-x-3">
-                <a href="edit_profile.php" class="px-6 py-3 bg-white text-slate-950 rounded-lg hover:bg-gray-100 transition font-medium shadow-lg">
-                  <i class="fas fa-edit mr-2"></i>Edit Profile
-                </a>
-                <a href="index.php" class="px-6 py-3 bg-gray-800 bg-opacity-80 text-white rounded-lg hover:bg-gray-700 transition font-medium shadow-lg">
-                  <i class="fas fa-home mr-2"></i>Home
-                </a>
+                    <!-- Quick Stats Row -->
+                    <div class="flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
+                      <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-blue-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                          <i class="fas fa-film text-blue-400 text-xs"></i>
+                        </div>
+                        <div>
+                          <span class="font-bold text-white"><?= $stats['movies_watched'] ?></span>
+                          <span class="text-gray-300 ml-1">watched</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                          <i class="fas fa-users text-green-400 text-xs"></i>
+                        </div>
+                        <div>
+                          <span class="font-bold text-white"><?= $followersCount ?></span>
+                          <span class="text-gray-300 ml-1">followers</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-purple-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                          <i class="fas fa-user-friends text-purple-400 text-xs"></i>
+                        </div>
+                        <div>
+                          <span class="font-bold text-white"><?= $followingCount ?></span>
+                          <span class="text-gray-300 ml-1">following</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-yellow-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                          <i class="fas fa-star text-yellow-400 text-xs"></i>
+                        </div>
+                        <div>
+                          <span class="font-bold text-white"><?= $stats['reviews_written'] ?></span>
+                          <span class="text-gray-300 ml-1">reviews</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="flex flex-col sm:flex-row gap-3 sm:flex-shrink-0">
+                    <a href="edit_profile.php" class="px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-slate-950 rounded-lg hover:bg-gray-100 transition font-medium shadow-lg text-center">
+                      <i class="fas fa-edit mr-2"></i>Edit Profile
+                    </a>
+                    <a href="index.php" class="px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-800 bg-opacity-80 text-white rounded-lg hover:bg-gray-700 transition font-medium shadow-lg text-center">
+                      <i class="fas fa-home mr-2"></i>Home
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -465,11 +515,11 @@ $followingCount = $userService->getFollowingCount($userId);
                         <span class="font-semibold text-white"><?= htmlspecialchars($user['username']) ?></span>
                         <?php switch ($act['activity_type']):
                           case 'watched_movie': ?> watched <span class="text-blue-400 font-medium"><?= htmlspecialchars($act['movie_title']); ?></span><?php break;
-                                                                                                                                                    case 'added_to_watchlist': ?> added <span class="text-yellow-400 font-medium"><?= htmlspecialchars($act['movie_title']); ?></span> to watchlist<?php break;
-                                                                                                                                                                      case 'rated_movie': ?> rated <span class="text-blue-400 font-medium"><?= htmlspecialchars($act['movie_title']); ?></span><?php break;
-                                                                                                                                                                      case 'reviewed_movie': ?> reviewed <span class="text-purple-400 font-medium"><?= htmlspecialchars($act['movie_title']); ?></span><?php break;
-                                                                                                                                                                      case 'achieved_badge': ?> earned the <span class="text-orange-400 font-medium"><?= htmlspecialchars($act['achievement_name']); ?></span> achievement<?php break;
-                                                                                                                                                                        endswitch; ?>
+                                                                                                                                                      case 'added_to_watchlist': ?> added <span class="text-yellow-400 font-medium"><?= htmlspecialchars($act['movie_title']); ?></span> to watchlist<?php break;
+                                                                                                                                                                                                                                                                                                    case 'rated_movie': ?> rated <span class="text-blue-400 font-medium"><?= htmlspecialchars($act['movie_title']); ?></span><?php break;
+                                                                                                                                                                                                                                                                                                                                                                                                                            case 'reviewed_movie': ?> reviewed <span class="text-purple-400 font-medium"><?= htmlspecialchars($act['movie_title']); ?></span><?php break;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            case 'achieved_badge': ?> earned the <span class="text-orange-400 font-medium"><?= htmlspecialchars($act['achievement_name']); ?></span> achievement<?php break;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          endswitch; ?>
                       </p>
                       <p class="text-gray-500 text-xs mt-1 flex items-center">
                         <i class="fas fa-clock mr-1"></i>
