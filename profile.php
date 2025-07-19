@@ -81,6 +81,14 @@ $followingCount = $userService->getFollowingCount($userId);
       transform: translateY(-2px);
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
     }
+
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
   </style>
 </head>
 
@@ -92,10 +100,10 @@ $followingCount = $userService->getFollowingCount($userId);
 
     <div class="pt-16">
       <!-- Profile Cover Section -->
-      <div class="profile-cover h-64 relative">
+      <div class="profile-cover h-64 sm:h-72 lg:h-80 relative">
         <div class="absolute inset-0 z-10 flex items-end">
           <div class="max-w-6xl mx-auto px-6 w-full pb-6">
-            <div class="flex flex-col md:flex-row items-start md:items-end space-y-4 md:space-y-0 md:space-x-6">
+            <div class="flex flex-col md:flex-row items-start md:items-start space-y-4 md:space-y-0 md:space-x-6">
               <!-- Profile Avatar -->
               <div class="relative">
                 <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden bg-gray-700 border-4 border-white shadow-xl">
@@ -116,7 +124,7 @@ $followingCount = $userService->getFollowingCount($userId);
                 <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div class="flex-1">
                     <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2"><?= htmlspecialchars($user['username']) ?></h1>
-                    <p class="text-base sm:text-lg lg:text-xl text-gray-200 mb-4 max-w-2xl"><?= htmlspecialchars($user['bio'] ?: 'Movie enthusiast exploring cinematic worlds') ?></p>
+                    <p class="text-base sm:text-lg lg:text-xl text-gray-200 mb-4 max-w-2xl line-clamp-2 leading-relaxed"><?= htmlspecialchars($user['bio'] ?: 'Movie enthusiast exploring cinematic worlds') ?></p>
 
                     <!-- Badges Row -->
                     <div class="flex flex-wrap items-center gap-3 mb-4">
@@ -519,7 +527,7 @@ $followingCount = $userService->getFollowingCount($userId);
                                                                                                                                                                                                                                                                                                     case 'rated_movie': ?> rated <span class="text-blue-400 font-medium"><?= htmlspecialchars($act['movie_title']); ?></span><?php break;
                                                                                                                                                                                                                                                                                                                                                                                                                             case 'reviewed_movie': ?> reviewed <span class="text-purple-400 font-medium"><?= htmlspecialchars($act['movie_title']); ?></span><?php break;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             case 'achieved_badge': ?> earned the <span class="text-orange-400 font-medium"><?= htmlspecialchars($act['achievement_name']); ?></span> achievement<?php break;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          endswitch; ?>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            endswitch; ?>
                       </p>
                       <p class="text-gray-500 text-xs mt-1 flex items-center">
                         <i class="fas fa-clock mr-1"></i>
