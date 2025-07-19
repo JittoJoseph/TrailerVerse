@@ -197,15 +197,27 @@ SELECT
     COALESCE((SELECT COUNT(*) FROM movie_ratings rt WHERE rt.user_id = u.id), 0) AS ratings_given,
     -- Average rating
     COALESCE((SELECT ROUND(AVG(rating),2) FROM movie_ratings rt2 WHERE rt2.user_id = u.id), 0.00) AS average_rating,
-    -- Favorite genre based on most frequent genre in the user's rated movies
-    (SELECT g2.name
-     FROM movie_ratings mr
-     JOIN movie_cache mc2 ON mr.movie_id = mc2.movie_id
-     JOIN genres g2 ON JSON_CONTAINS(mc2.genre_ids, JSON_ARRAY(CAST(g2.id AS UNSIGNED)))
-     WHERE mr.user_id = u.id
-     GROUP BY g2.id
-     ORDER BY COUNT(*) DESC
-     LIMIT 1
+    -- Favorite genre with fallback system: prioritizes rated movies, falls back to watched movies
+    COALESCE(
+        -- Primary: Hybrid score for rated movies (requires only 1 rating)
+        (SELECT g2.name
+         FROM movie_ratings mr
+         JOIN movie_cache mc2 ON mr.movie_id = mc2.movie_id
+         JOIN genres g2 ON JSON_CONTAINS(mc2.genre_ids, JSON_ARRAY(CAST(g2.id AS UNSIGNED)))
+         WHERE mr.user_id = u.id
+         GROUP BY g2.id, g2.name
+         HAVING COUNT(*) >= 1
+         ORDER BY (AVG(mr.rating) * 0.7 + (COUNT(*) / 10.0) * 0.3) DESC
+         LIMIT 1),
+        -- Fallback: Most watched genre (for users who don't rate)
+        (SELECT g3.name
+         FROM movie_status ms
+         JOIN movie_cache mc3 ON ms.movie_id = mc3.movie_id
+         JOIN genres g3 ON JSON_CONTAINS(mc3.genre_ids, JSON_ARRAY(CAST(g3.id AS UNSIGNED)))
+         WHERE ms.user_id = u.id AND ms.status = 'watched'
+         GROUP BY g3.id, g3.name
+         ORDER BY COUNT(*) DESC
+         LIMIT 1)
     ) AS favorite_genre_name,
     -- Total achievement points
     COALESCE((SELECT SUM(a.points) FROM user_achievements ua JOIN achievements a ON ua.achievement_id = a.id WHERE ua.user_id = u.id), 0) AS achievement_points
