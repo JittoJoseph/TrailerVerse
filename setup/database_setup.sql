@@ -137,7 +137,7 @@ CREATE TABLE genres (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 12. USER STATISTICS TABLE
+-- 12. USER STATISTICS TABLE (DEPRECATED: superseded by user_stats_view)
 CREATE TABLE user_statistics (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
@@ -154,6 +154,8 @@ CREATE TABLE user_statistics (
     FOREIGN KEY (favorite_genre_id) REFERENCES genres(id) ON DELETE SET NULL,
     UNIQUE KEY unique_user_stats (user_id)
 );
+-- DEPRECATION: Drop table since it's no longer required (stats computed dynamically via view)
+DROP TABLE IF EXISTS user_statistics;
 
 -- ============================================
 -- VIEWS FOR COMMON QUERIES
@@ -179,15 +181,47 @@ FROM user_activities ua
 JOIN users u ON ua.user_id = u.id
 LEFT JOIN movie_cache mc ON ua.movie_id = mc.movie_id
 LEFT JOIN achievements a ON ua.achievement_id = a.id
-WHERE u.is_public = TRUE
-ORDER BY ua.created_at DESC;
+WHERE u.is_public = TRUE;
 
-CREATE VIEW user_stats_view AS
+-- Dynamic user stats view: calculates counts and averages on the fly
+CREATE OR REPLACE VIEW user_stats_view AS
 SELECT
-    us.*,
-    g.name as favorite_genre_name
-FROM user_statistics us
-LEFT JOIN genres g ON us.favorite_genre_id = g.id;
+    u.id AS user_id,
+    -- Movies watched count
+    COALESCE((SELECT COUNT(*) FROM movie_status ms WHERE ms.user_id = u.id AND ms.status = 'watched'), 0) AS movies_watched,
+    -- Watchlist count
+    COALESCE((SELECT COUNT(*) FROM movie_status ms2 WHERE ms2.user_id = u.id AND ms2.status = 'want_to_watch'), 0) AS movies_in_watchlist,
+    -- Reviews written
+    COALESCE((SELECT COUNT(*) FROM movie_reviews r WHERE r.user_id = u.id), 0) AS reviews_written,
+    -- Ratings given
+    COALESCE((SELECT COUNT(*) FROM movie_ratings rt WHERE rt.user_id = u.id), 0) AS ratings_given,
+    -- Average rating
+    COALESCE((SELECT ROUND(AVG(rating),2) FROM movie_ratings rt2 WHERE rt2.user_id = u.id), 0.00) AS average_rating,
+    -- Favorite genre with fallback system: prioritizes rated movies, falls back to watched movies
+    COALESCE(
+        -- Primary: Hybrid score for rated movies (requires only 1 rating)
+        (SELECT g2.name
+         FROM movie_ratings mr
+         JOIN movie_cache mc2 ON mr.movie_id = mc2.movie_id
+         JOIN genres g2 ON JSON_CONTAINS(mc2.genre_ids, JSON_ARRAY(CAST(g2.id AS UNSIGNED)))
+         WHERE mr.user_id = u.id
+         GROUP BY g2.id, g2.name
+         HAVING COUNT(*) >= 1
+         ORDER BY (AVG(mr.rating) * 0.7 + (COUNT(*) / 10.0) * 0.3) DESC
+         LIMIT 1),
+        -- Fallback: Most watched genre (for users who don't rate)
+        (SELECT g3.name
+         FROM movie_status ms
+         JOIN movie_cache mc3 ON ms.movie_id = mc3.movie_id
+         JOIN genres g3 ON JSON_CONTAINS(mc3.genre_ids, JSON_ARRAY(CAST(g3.id AS UNSIGNED)))
+         WHERE ms.user_id = u.id AND ms.status = 'watched'
+         GROUP BY g3.id, g3.name
+         ORDER BY COUNT(*) DESC
+         LIMIT 1)
+    ) AS favorite_genre_name,
+    -- Total achievement points
+    COALESCE((SELECT SUM(a.points) FROM user_achievements ua JOIN achievements a ON ua.achievement_id = a.id WHERE ua.user_id = u.id), 0) AS achievement_points
+FROM users u;
 
 -- ============================================
 -- INITIAL DATA INSERTS
