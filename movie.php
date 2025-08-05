@@ -205,7 +205,10 @@ if (isset($_SESSION['user_id'])) {
         },
         body: `action=watchlist&movie_id=<?= $id ?>`
       }).then(r => r.json()).then(d => {
-        if (d.success) location.reload();
+        if (d.success) {
+          location.reload();
+          // Achievement checking handled server-side
+        }
       });
     });
     // Watched toggle
@@ -217,7 +220,10 @@ if (isset($_SESSION['user_id'])) {
         },
         body: `action=watched&movie_id=<?= $id ?>`
       }).then(r => r.json()).then(d => {
-        if (d.success) location.reload();
+        if (d.success) {
+          location.reload();
+          // Achievement checking handled server-side
+        }
       });
     });
     // Review submission
@@ -247,6 +253,7 @@ if (isset($_SESSION['user_id'])) {
             list.appendChild(div);
           });
           document.getElementById('review-textarea').value = '';
+          // Achievement checking handled server-side
         } else {
           alert(data.error || 'Failed to submit review');
         }
