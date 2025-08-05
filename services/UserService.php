@@ -62,22 +62,6 @@ class UserService
   }
 
   /**
-   * Fetch recent user activities (feed entries)
-   *
-   * @param int $id
-   * @param int $limit
-   * @return array
-   */
-  public function getRecentActivities(int $id, int $limit = 10): array
-  {
-    $limit = (int)$limit;
-    $sql = 'SELECT * FROM user_feed_view WHERE user_id = ? ORDER BY created_at DESC LIMIT ' . $limit;
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([$id]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-  }
-
-  /**
    * Fetch recent reviews written by user
    *
    * @param int $id
@@ -128,7 +112,7 @@ class UserService
   public function getAchievements(int $id): array
   {
     $stmt = $this->db->prepare(
-      'SELECT a.name, a.icon, ua.earned_at
+      'SELECT a.id, a.name, a.description, a.icon, a.points, ua.earned_at
        FROM user_achievements ua
        JOIN achievements a ON ua.achievement_id = a.id
        WHERE ua.user_id = ?

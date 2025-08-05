@@ -1,20 +1,35 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/AchievementService.php';
 
 class MovieReviewService
 {
   private $db;
+  private $achievementService;
+
   public function __construct($dbConn)
   {
     $this->db = $dbConn;
+    $this->achievementService = new AchievementService();
   }
 
   public function addReview(int $userId, int $movieId, string $text): bool
   {
     $sql = 'INSERT INTO movie_reviews (user_id, movie_id, review_text, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE review_text = ?, updated_at = NOW()';
     $stmt = $this->db->prepare($sql);
-    return $stmt->execute([$userId, $movieId, $text, $text]);
+    $success = $stmt->execute([$userId, $movieId, $text, $text]);
+
+    if ($success) {
+      // Create activity entry
+      $activityStmt = $this->db->prepare("INSERT INTO user_activities (user_id, activity_type, movie_id) VALUES (?, 'reviewed_movie', ?) ON DUPLICATE KEY UPDATE created_at = created_at");
+      $activityStmt->execute([$userId, $movieId]);
+
+      // Check for achievements
+      $this->achievementService->checkAndAwardAchievements($userId, 'reviewed');
+    }
+
+    return $success;
   }
   public function getReviews(int $movieId): array
   {

@@ -2,10 +2,15 @@
 require_once 'config/app.php';
 require_once 'config/tmdb_config.php';
 require_once 'services/MovieService.php';
+require_once 'services/AchievementService.php';
 
 $movieService = new MovieService();
+$achievementService = new AchievementService();
+
 $trendingMovies = $movieService->getTrendingMovies();
 $movies = $trendingMovies['results'] ?? [];
+$latestAchievements = $achievementService->getLatestAchievements();
+
 // Random featured movie from top 12 trending
 $featuredCandidates = array_slice($movies, 0, min(12, count($movies)));
 $featuredMovie = $featuredCandidates ? $featuredCandidates[array_rand($featuredCandidates)] : null;
@@ -132,41 +137,84 @@ $featuredMovie = $featuredCandidates ? $featuredCandidates[array_rand($featuredC
 
       <!-- Recent Achievements -->
       <div class="glass rounded-2xl p-6">
-        <h3 class="text-lg font-semibold mb-4">Latest Achievements</h3>
-        <div class="space-y-3">
-          <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-              <i class="fas fa-star text-slate-950 text-xs"></i>
-            </div>
-            <div>
-              <p class="text-sm font-medium">First Review</p>
-              <p class="text-xs text-gray-400">@moviebuff23</p>
-            </div>
-          </div>
-
-          <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <i class="fas fa-film text-white text-xs"></i>
-            </div>
-            <div>
-              <p class="text-sm font-medium">10 Movies Watched</p>
-              <p class="text-xs text-gray-400">@cinephile_sarah</p>
-            </div>
-          </div>
-
-          <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-              <i class="fas fa-trophy text-white text-xs"></i>
-            </div>
-            <div>
-              <p class="text-sm font-medium">Genre Explorer</p>
-              <p class="text-xs text-gray-400">@filmfan_mike</p>
-            </div>
-          </div>
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold">
+            Latest Achievements
+          </h3>
         </div>
-      </div>
 
-      <!-- Trending Genres -->
+        <div class="space-y-3">
+          <?php
+          // Simple, clean color palette for sidebar
+          $simpleColors = [
+            'bg-emerald-500',
+            'bg-blue-500',
+            'bg-purple-500',
+            'bg-pink-500',
+            'bg-orange-500',
+            'bg-indigo-500',
+            'bg-cyan-500',
+            'bg-red-500',
+            'bg-yellow-500',
+            'bg-teal-500',
+            'bg-violet-500',
+            'bg-rose-500'
+          ];
+
+          foreach ($latestAchievements as $index => $achievement):
+            $colorIndex = ($achievement['id'] ?? $index) % count($simpleColors);
+            $bgColor = $simpleColors[$colorIndex];
+          ?>
+            <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/5 transition-colors duration-200 group">
+              <!-- Simple Icon Circle -->
+              <div class="w-10 h-10 <?= $bgColor ?> rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
+                <i class="<?= htmlspecialchars($achievement['icon']) ?> text-white text-sm"></i>
+              </div>
+
+              <!-- Achievement Info -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1 min-w-0">
+                    <h4 class="font-medium text-sm text-white truncate group-hover:text-gray-200 transition-colors">
+                      <?= htmlspecialchars($achievement['name']) ?>
+                    </h4>
+                    <p class="text-xs text-gray-400 flex items-center mt-0.5">
+                      <i class="fas fa-user text-xs mr-1"></i>
+                      @<?= htmlspecialchars($achievement['username']) ?>
+                    </p>
+                  </div>
+
+                  <!-- Simple Points Badge -->
+                  <div class="flex items-center space-x-1 bg-yellow-400/20 rounded-full px-2 py-1 ml-2">
+                    <i class="fas fa-star text-yellow-400 text-xs"></i>
+                    <span class="text-yellow-400 font-medium text-xs">+<?= $achievement['points'] ?? 10 ?></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <?php endforeach; ?>
+
+          <?php if (empty($latestAchievements)): ?>
+            <div class="text-center py-6">
+              <div class="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-trophy text-gray-400 text-lg"></i>
+              </div>
+              <h4 class="font-medium text-gray-400 mb-1">No Recent Achievements</h4>
+              <p class="text-xs text-gray-500">Start watching movies to unlock achievements!</p>
+            </div>
+          <?php endif; ?>
+        </div>
+
+        <!-- Simple View All Button -->
+        <?php if (!empty($latestAchievements)): ?>
+          <div class="mt-4 pt-4 border-t border-white/10">
+            <button class="w-full text-sm text-gray-400 hover:text-white transition-colors duration-200 flex items-center justify-center space-x-2">
+              <span>View All Achievements</span>
+              <i class="fas fa-arrow-right text-xs"></i>
+            </button>
+          </div>
+        <?php endif; ?>
+      </div> <!-- Trending Genres -->
       <div class="glass rounded-2xl p-6">
         <h3 class="text-lg font-semibold mb-4">Trending Genres</h3>
         <div class="space-y-3">
