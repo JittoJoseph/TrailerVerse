@@ -249,23 +249,23 @@ INSERT INTO genres (id, name) VALUES
 (10752, 'War'),
 (37, 'Western');
 
--- Insert achievement templates
+-- Insert achievement templates with Tailwind icons
 INSERT INTO achievements (name, description, icon, achievement_type, criteria_value, points) VALUES
-('First Steps', 'Watch your first movie', 'first-movie.png', 'movies_watched', 1, 10),
-('Movie Buff', 'Watch 10 movies', 'movie-buff.png', 'movies_watched', 10, 25),
-('Cinephile', 'Watch 50 movies', 'cinephile.png', 'movies_watched', 50, 100),
-('Movie Master', 'Watch 100 movies', 'movie-master.png', 'movies_watched', 100, 200),
-('Review Rookie', 'Write your first review', 'first-review.png', 'reviews_written', 1, 15),
-('Critic', 'Write 10 reviews', 'critic.png', 'reviews_written', 10, 50),
-('Expert Reviewer', 'Write 25 reviews', 'expert-reviewer.png', 'reviews_written', 25, 100),
-('Rating Starter', 'Rate your first movie', 'first-rating.png', 'ratings_given', 1, 5),
-('Rating Expert', 'Rate 25 movies', 'rating-expert.png', 'ratings_given', 25, 50),
-('Taste Maker', 'Rate 100 movies', 'taste-maker.png', 'ratings_given', 100, 150),
-('Selective Viewer', 'Maintain high average rating (8.5+)', 'selective.png', 'high_ratings', 85, 75),
-('Quality Seeker', 'Maintain very high average rating (9.0+)', 'quality.png', 'high_ratings', 90, 150),
-('Genre Explorer', 'Watch movies from 5 different genres', 'explorer.png', 'genre_diversity', 5, 40),
-('Genre Master', 'Watch movies from 10 different genres', 'genre-master.png', 'genre_diversity', 10, 80),
-('Classic Connoisseur', 'Watch 10 movies from before 1990', 'classic.png', 'classic_movies', 10, 60),
-('Vintage Enthusiast', 'Watch 25 classic movies', 'vintage.png', 'classic_movies', 25, 120),
-('Trend Follower', 'Watch 10 movies from current year', 'trending.png', 'new_releases', 10, 30),
-('Early Adopter', 'Watch 25 new releases', 'early-adopter.png', 'new_releases', 25, 60);
+('First Steps', 'Watch your first movie', 'fas fa-play', 'movies_watched', 1, 10),
+('Movie Buff', 'Watch 10 movies', 'fas fa-film', 'movies_watched', 10, 25),
+('Cinephile', 'Watch 50 movies', 'fas fa-video', 'movies_watched', 50, 100),
+('Movie Master', 'Watch 100 movies', 'fas fa-crown', 'movies_watched', 100, 200),
+('Review Rookie', 'Write your first review', 'fas fa-comment', 'reviews_written', 1, 15),
+('Critic', 'Write 10 reviews', 'fas fa-pen-fancy', 'reviews_written', 10, 50),
+('Expert Reviewer', 'Write 25 reviews', 'fas fa-feather-alt', 'reviews_written', 25, 100),
+('Rating Starter', 'Rate your first movie', 'fas fa-star', 'ratings_given', 1, 5),
+('Rating Expert', 'Rate 25 movies', 'fas fa-star-half-alt', 'ratings_given', 25, 50),
+('Taste Maker', 'Rate 100 movies', 'fas fa-medal', 'ratings_given', 100, 150),
+('Selective Viewer', 'Maintain high average rating (8.5+)', 'fas fa-eye', 'high_ratings', 85, 75),
+('Quality Seeker', 'Maintain very high average rating (9.0+)', 'fas fa-gem', 'high_ratings', 90, 150),
+('Genre Explorer', 'Watch movies from 5 different genres', 'fas fa-compass', 'genre_diversity', 5, 40),
+('Genre Master', 'Watch movies from 10 different genres', 'fas fa-trophy', 'genre_diversity', 10, 80),
+('Classic Connoisseur', 'Watch 10 movies from before 1990', 'fas fa-history', 'classic_movies', 10, 60),
+('Vintage Enthusiast', 'Watch 25 classic movies', 'fas fa-hourglass-half', 'classic_movies', 25, 120),
+('Trend Follower', 'Watch 10 movies from current year', 'fas fa-fire', 'new_releases', 10, 30),
+('Early Adopter', 'Watch 25 new releases', 'fas fa-rocket', 'new_releases', 25, 60);
