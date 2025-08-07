@@ -16,7 +16,6 @@ $userId = getCurrentUserId();
 $user = $userService->getUserById($userId);
 $stats = $userService->getUserStats($userId);
 $achCount = $userService->getAchievementCount($userId);
-$activities = $userService->getRecentActivities($userId, 10);
 $reviews = $userService->getRecentReviews($userId, 5);
 $watchlist = $userService->getWatchlist($userId, 12);
 $achievements = $userService->getAchievements($userId);
@@ -474,65 +473,113 @@ $followingCount = $userService->getFollowingCount($userId);
             <?php endif; ?>
           </section>
 
-          <!-- Recent Activity Section -->
-          <section>
+          <!-- Achievements Section -->
+          <section class="mt-12">
             <div class="flex items-center justify-between mb-8">
               <h2 class="text-3xl font-bold flex items-center">
-                <i class="fas fa-clock mr-4 text-blue-400"></i>Recent Activity
+                <i class="fas fa-trophy mr-4 text-yellow-400"></i>Achievements
               </h2>
               <div class="flex items-center space-x-4">
-                <span class="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-full"><?= count($activities) ?> activities</span>
-                <button class="text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium">
-                  View All <i class="fas fa-arrow-right ml-1"></i>
-                </button>
+                <span class="text-sm text-gray-400 bg-gray-800 px-4 py-2 rounded-full"><?= count($achievements) ?> earned</span>
               </div>
             </div>
-            <?php if (empty($activities)): ?>
+
+            <?php if (empty($achievements)): ?>
               <div class="glass p-12 rounded-xl text-center">
-                <i class="fas fa-clock text-8xl text-gray-600 mb-6"></i>
-                <h3 class="text-2xl font-semibold text-gray-400 mb-3">No recent activity</h3>
-                <p class="text-gray-500 text-lg">Start watching movies to see your activity here!</p>
+                <i class="fas fa-trophy text-8xl text-gray-600 mb-6"></i>
+                <h3 class="text-2xl font-semibold text-gray-400 mb-3">No achievements yet</h3>
+                <p class="text-gray-500 text-lg">Start watching movies and engaging with the platform to unlock achievements!</p>
               </div>
             <?php else: ?>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <?php foreach ($activities as $act): ?>
-                  <div class="glass p-5 rounded-xl flex items-center space-x-4 hover:bg-opacity-10 transition-all duration-300 group">
-                    <?php
-                    $iconMap = [
-                      'watched_movie' => 'fas fa-play',
-                      'added_to_watchlist' => 'fas fa-bookmark',
-                      'rated_movie' => 'fas fa-star',
-                      'reviewed_movie' => 'fas fa-comment',
-                      'achieved_badge' => 'fas fa-trophy'
-                    ];
-                    $colorMap = [
-                      'watched_movie' => 'text-green-400 bg-green-500',
-                      'added_to_watchlist' => 'text-yellow-400 bg-yellow-500',
-                      'rated_movie' => 'text-blue-400 bg-blue-500',
-                      'reviewed_movie' => 'text-purple-400 bg-purple-500',
-                      'achieved_badge' => 'text-orange-400 bg-orange-500'
-                    ];
-                    $bgColor = explode(' ', $colorMap[$act['activity_type']])[1];
-                    $textColor = explode(' ', $colorMap[$act['activity_type']])[0];
-                    ?>
-                    <div class="w-12 h-12 rounded-full <?= $bgColor ?> bg-opacity-20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                      <i class="<?= $iconMap[$act['activity_type']] ?> <?= $textColor ?> text-lg"></i>
-                    </div>
-                    <div class="flex-1">
-                      <p class="text-sm">
-                        <span class="font-semibold text-white"><?= htmlspecialchars($user['username']) ?></span>
-                        <?php switch ($act['activity_type']):
-                          case 'watched_movie': ?> watched <span class="text-blue-400 font-medium"><?= htmlspecialchars($act['movie_title']); ?></span><?php break;
-                                                                                                                                                      case 'added_to_watchlist': ?> added <span class="text-yellow-400 font-medium"><?= htmlspecialchars($act['movie_title']); ?></span> to watchlist<?php break;
-                                                                                                                                                                                                                                                                                                    case 'rated_movie': ?> rated <span class="text-blue-400 font-medium"><?= htmlspecialchars($act['movie_title']); ?></span><?php break;
-                                                                                                                                                                                                                                                                                                                                                                                                                            case 'reviewed_movie': ?> reviewed <span class="text-purple-400 font-medium"><?= htmlspecialchars($act['movie_title']); ?></span><?php break;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            case 'achieved_badge': ?> earned the <span class="text-orange-400 font-medium"><?= htmlspecialchars($act['achievement_name']); ?></span> achievement<?php break;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            endswitch; ?>
-                      </p>
-                      <p class="text-gray-500 text-xs mt-1 flex items-center">
-                        <i class="fas fa-clock mr-1"></i>
-                        <?= date('M j, Y g:ia', strtotime($act['created_at'])) ?>
-                      </p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <?php
+                // Premium gradient color palette with semantic meanings
+                $achievementGradients = [
+                  'bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600',
+                  'bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600',
+                  'bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600',
+                  'bg-gradient-to-br from-pink-400 via-pink-500 to-pink-600',
+                  'bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600',
+                  'bg-gradient-to-br from-indigo-400 via-indigo-500 to-indigo-600',
+                  'bg-gradient-to-br from-cyan-400 via-cyan-500 to-cyan-600',
+                  'bg-gradient-to-br from-red-400 via-red-500 to-red-600',
+                  'bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600',
+                  'bg-gradient-to-br from-teal-400 via-teal-500 to-teal-600',
+                  'bg-gradient-to-br from-violet-400 via-violet-500 to-violet-600',
+                  'bg-gradient-to-br from-rose-400 via-rose-500 to-rose-600',
+                  'bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600',
+                  'bg-gradient-to-br from-lime-400 via-lime-500 to-lime-600',
+                  'bg-gradient-to-br from-sky-400 via-sky-500 to-sky-600',
+                  'bg-gradient-to-br from-fuchsia-400 via-fuchsia-500 to-fuchsia-600',
+                  'bg-gradient-to-br from-slate-400 via-slate-500 to-slate-600',
+                  'bg-gradient-to-br from-emerald-500 via-blue-500 to-purple-500'
+                ];
+
+                foreach ($achievements as $index => $ach):
+                  $gradientIndex = ($ach['id'] ?? $index) % count($achievementGradients);
+                  $gradientBg = $achievementGradients[$gradientIndex];
+                ?>
+                  <div class="group relative">
+                    <!-- Achievement Card -->
+                    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/50 via-slate-800/30 to-slate-900/50 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-500 ease-out group-hover:shadow-2xl group-hover:shadow-purple-500/10 group-hover:-translate-y-1">
+
+                      <!-- Gradient Background Overlay -->
+                      <div class="absolute inset-0 <?= $gradientBg ?> opacity-5 group-hover:opacity-10 transition-opacity duration-500"></div>
+
+                      <!-- Content -->
+                      <div class="relative p-6">
+                        <!-- Icon Header -->
+                        <div class="flex items-center justify-between mb-4">
+                          <div class="relative">
+                            <div class="w-14 h-14 <?= $gradientBg ?> rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                              <i class="<?= htmlspecialchars($ach['icon']) ?> text-white text-xl"></i>
+                            </div>
+                            <!-- Glow Effect -->
+                            <div class="absolute inset-0 w-14 h-14 <?= $gradientBg ?> rounded-2xl blur-md opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
+                          </div>
+
+                          <!-- Points Badge -->
+                          <div class="flex items-center space-x-1 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 backdrop-blur-sm border border-yellow-400/20 rounded-full px-3 py-1.5">
+                            <i class="fas fa-star text-yellow-400 text-xs"></i>
+                            <span class="text-yellow-400 font-semibold text-sm">+<?= $ach['points'] ?></span>
+                          </div>
+                        </div>
+
+                        <!-- Achievement Info -->
+                        <div class="space-y-3">
+                          <h3 class="font-bold text-lg text-white group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-300 group-hover:bg-clip-text transition-all duration-300">
+                            <?= htmlspecialchars($ach['name']) ?>
+                          </h3>
+
+                          <p class="text-gray-400 text-sm leading-relaxed line-clamp-2">
+                            <?= htmlspecialchars($ach['description']) ?>
+                          </p>
+
+                          <!-- Achievement Meta -->
+                          <div class="flex items-center justify-between pt-2 border-t border-white/10">
+                            <div class="flex items-center space-x-2 text-xs text-gray-500">
+                              <i class="fas fa-calendar-alt"></i>
+                              <span>Earned <?= date('M j, Y', strtotime($ach['earned_at'])) ?></span>
+                            </div>
+
+                            <!-- Achievement Rarity Indicator -->
+                            <div class="flex items-center space-x-1">
+                              <?php
+                              // Simple rarity based on points
+                              $rarity = $ach['points'] >= 100 ? 'Epic' : ($ach['points'] >= 50 ? 'Rare' : 'Common');
+                              $rarityColor = $ach['points'] >= 100 ? 'text-purple-400' : ($ach['points'] >= 50 ? 'text-blue-400' : 'text-green-400');
+                              ?>
+                              <div class="w-2 h-2 <?= str_replace('text-', 'bg-', $rarityColor) ?> rounded-full"></div>
+                              <span class="text-xs <?= $rarityColor ?> font-medium"><?= $rarity ?></span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Shine Effect on Hover -->
+                      <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out"></div>
+                      </div>
                     </div>
                   </div>
                 <?php endforeach; ?>
@@ -540,45 +587,6 @@ $followingCount = $userService->getFollowingCount($userId);
             <?php endif; ?>
           </section>
         </div>
-
-        <!-- Achievements Section -->
-        <section class="mt-16">
-          <div class="flex items-center justify-between mb-8">
-            <h2 class="text-3xl font-bold flex items-center">
-              <i class="fas fa-trophy mr-4 text-yellow-400"></i>Achievements
-            </h2>
-            <div class="flex items-center space-x-4">
-              <span class="text-sm text-gray-400 bg-gray-800 px-4 py-2 rounded-full"><?= count($achievements) ?> earned</span>
-              <button class="text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium">
-                View All <i class="fas fa-arrow-right ml-1"></i>
-              </button>
-            </div>
-          </div>
-          <?php if (empty($achievements)): ?>
-            <div class="glass p-12 rounded-xl text-center">
-              <i class="fas fa-trophy text-8xl text-gray-600 mb-6"></i>
-              <h3 class="text-2xl font-semibold text-gray-400 mb-3">No achievements yet</h3>
-              <p class="text-gray-500 text-lg">Start watching movies and engaging with the platform to unlock achievements!</p>
-            </div>
-          <?php else: ?>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
-              <?php foreach ($achievements as $ach): ?>
-                <div class="group flex flex-col items-center p-4 glass rounded-xl hover:scale-105 transition-transform duration-300">
-                  <div class="w-16 h-16 mb-3 relative">
-                    <img src="assets/achievements/<?= $ach['icon'] ?>"
-                      alt="<?= htmlspecialchars($ach['name']) ?>"
-                      class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300">
-                    <div class="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center group-hover:animate-pulse">
-                      <i class="fas fa-check text-black text-xs"></i>
-                    </div>
-                  </div>
-                  <h3 class="text-sm font-medium text-center text-white mb-1 group-hover:text-yellow-400 transition-colors"><?= htmlspecialchars($ach['name']) ?></h3>
-                  <p class="text-xs text-gray-400 text-center"><?= date('M j, Y', strtotime($ach['earned_at'])) ?></p>
-                </div>
-              <?php endforeach; ?>
-            </div>
-          <?php endif; ?>
-        </section>
 
         <?php include './includes/footer.php'; ?>
       </div>

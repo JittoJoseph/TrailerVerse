@@ -1,13 +1,16 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/AchievementService.php';
 
 class MovieStatusService
 {
   private $db;
+  private $achievementService;
 
   public function __construct($dbConn)
   {
     $this->db = $dbConn;
+    $this->achievementService = new AchievementService();
   }
 
   /**
@@ -24,12 +27,26 @@ class MovieStatusService
     if (!$ok) {
       return false;
     }
+
     // Mark as watched
     $sql2 = "INSERT INTO movie_status (user_id, movie_id, status, date_watched)
                  VALUES (?, ?, 'watched', NOW())
                  ON DUPLICATE KEY UPDATE status='watched', date_watched=NOW()";
     $stmt2 = $this->db->prepare($sql2);
     $stmt2->execute([$userId, $movieId]);
+
+    // Create activity entry for rating
+    $activityStmt = $this->db->prepare("INSERT INTO user_activities (user_id, activity_type, movie_id) VALUES (?, 'rated_movie', ?)");
+    $activityStmt->execute([$userId, $movieId]);
+
+    // Create activity entry for watching (if it's a new watch)
+    $watchActivityStmt = $this->db->prepare("INSERT INTO user_activities (user_id, activity_type, movie_id) VALUES (?, 'watched_movie', ?) ON DUPLICATE KEY UPDATE created_at = created_at");
+    $watchActivityStmt->execute([$userId, $movieId]);
+
+    // Check for achievements
+    $this->achievementService->checkAndAwardAchievements($userId, 'rated');
+    $this->achievementService->checkAndAwardAchievements($userId, 'watched');
+
     return true;
   }
 
@@ -49,6 +66,14 @@ class MovieStatusService
     }
     $ins = $this->db->prepare("INSERT INTO movie_status (user_id, movie_id, status) VALUES (?, ?, 'want_to_watch') ON DUPLICATE KEY UPDATE status='want_to_watch', date_added=NOW()");
     $ins->execute([$userId, $movieId]);
+
+    // Create activity entry
+    $activityStmt = $this->db->prepare("INSERT INTO user_activities (user_id, activity_type, movie_id) VALUES (?, 'added_to_watchlist', ?)");
+    $activityStmt->execute([$userId, $movieId]);
+
+    // Check for watchlist achievements (if needed)
+    $this->achievementService->checkAndAwardAchievements($userId, 'watchlist', $movieId);
+
     return true;
   }
 
@@ -68,6 +93,14 @@ class MovieStatusService
     }
     $ins = $this->db->prepare("INSERT INTO movie_status (user_id, movie_id, status, date_watched) VALUES (?, ?, 'watched', NOW()) ON DUPLICATE KEY UPDATE status='watched', date_watched=NOW()");
     $ins->execute([$userId, $movieId]);
+
+    // Create activity entry
+    $activityStmt = $this->db->prepare("INSERT INTO user_activities (user_id, activity_type, movie_id) VALUES (?, 'watched_movie', ?)");
+    $activityStmt->execute([$userId, $movieId]);
+
+    // Check for achievements
+    $this->achievementService->checkAndAwardAchievements($userId, 'watched');
+
     return true;
   }
 
