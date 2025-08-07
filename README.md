@@ -1,8 +1,8 @@
-# 🎬 TrailerVerse
+# TrailerVerse
 
 TrailerVerse is a movie discovery and tracking app that lets you explore films, mark what you've watched, rate and review movies, earn achievements, and connect with friends. Built using PHP, MySQL, Tailwind CSS, and the TMDB API.
 
-## 🚀 Features
+## Features
 
 - Browse trending, top-rated, and recommended movies
 - Watch trailers and view detailed movie info
@@ -12,13 +12,13 @@ TrailerVerse is a movie discovery and tracking app that lets you explore films, 
 - Earn badges and track your stats
 - Clean and responsive UI
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - **Backend:** PHP, MySQL, Apache (XAMPP)
 - **Frontend:** Tailwind CSS, HTML, JS
 - **API:** [TMDB API](https://www.themoviedb.org/documentation/api)
 
-## 📦 Setup Instructions
+## Setup Instructions
 
 1. Clone the repo:
    ```bash
