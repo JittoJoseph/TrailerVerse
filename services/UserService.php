@@ -170,4 +170,116 @@ class UserService
     $stmt->execute([$id, 'watched']);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
+
+  /**
+   * Check if one user follows another
+   */
+  public function isFollowing(int $followerId, int $followingId): bool
+  {
+    $stmt = $this->db->prepare('SELECT 1 FROM user_follows WHERE follower_id = ? AND following_id = ? LIMIT 1');
+    $stmt->execute([$followerId, $followingId]);
+    return (bool)$stmt->fetchColumn();
+  }
+
+  /**
+   * Follow a user (no-op if already following)
+   */
+  public function followUser(int $followerId, int $followingId): bool
+  {
+    if ($followerId === $followingId) return false;
+    try {
+      $stmt = $this->db->prepare('INSERT IGNORE INTO user_follows (follower_id, following_id, created_at) VALUES (?, ?, NOW())');
+      return $stmt->execute([$followerId, $followingId]);
+    } catch (PDOException $e) {
+      return false;
+    }
+  }
+
+  /**
+   * Unfollow a user (no-op if not following)
+   */
+  public function unfollowUser(int $followerId, int $followingId): bool
+  {
+    $stmt = $this->db->prepare('DELETE FROM user_follows WHERE follower_id = ? AND following_id = ?');
+    return $stmt->execute([$followerId, $followingId]);
+  }
+
+  /**
+   * Get followers list
+   */
+  public function getFollowers(int $userId, int $limit = 20): array
+  {
+    $limit = (int)$limit;
+    $sql = 'SELECT u.id, u.username, u.profile_picture
+            FROM user_follows uf
+            JOIN users u ON uf.follower_id = u.id
+            WHERE uf.following_id = ?
+            ORDER BY uf.created_at DESC
+            LIMIT ' . $limit;
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([$userId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  /**
+   * Get following list
+   */
+  public function getFollowing(int $userId, int $limit = 20): array
+  {
+    $limit = (int)$limit;
+    $sql = 'SELECT u.id, u.username, u.profile_picture
+            FROM user_follows uf
+            JOIN users u ON uf.following_id = u.id
+            WHERE uf.follower_id = ?
+            ORDER BY uf.created_at DESC
+            LIMIT ' . $limit;
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([$userId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  /**
+   * Get activity feed for a user (their own + people they follow)
+   */
+  public function getFeed(int $userId, int $limit = 20, int $offset = 0): array
+  {
+    $limit = (int)$limit;
+    $offset = (int)$offset;
+    $sql = "SELECT ufv.*
+            FROM user_feed_view ufv
+            WHERE ufv.user_id = :uid
+               OR ufv.user_id IN (SELECT following_id FROM user_follows WHERE follower_id = :uid)
+            ORDER BY ufv.created_at DESC
+            LIMIT :lim OFFSET :off";
+    $stmt = $this->db->prepare($sql);
+    // Need to bind LIMIT/OFFSET as integers explicitly
+    $stmt->bindValue(':uid', $userId, PDO::PARAM_INT);
+    $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  /**
+   * Simple suggested users (public, not followed yet)
+   */
+  public function getSuggestedUsers(int $userId, int $limit = 6): array
+  {
+    // Strategy: show public users excluding self. Prioritize people not yet followed,
+    // but include already-followed users to keep the list filled when the network is small.
+    $limit = (int)$limit;
+    $sql = 'SELECT u.id, u.username, u.profile_picture,
+                   CASE WHEN uf.follower_id IS NULL THEN 0 ELSE 1 END AS is_following,
+                   CASE WHEN uf.follower_id IS NULL THEN 0 ELSE 1 END AS priority
+            FROM users u
+            LEFT JOIN user_follows uf
+              ON uf.follower_id = :uid AND uf.following_id = u.id
+            WHERE u.id <> :uid AND u.is_public = TRUE
+            ORDER BY priority ASC, RAND()
+            LIMIT ' . $limit;
+    $stmt = $this->db->prepare($sql);
+    $stmt->bindValue(':uid', $userId, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
 }
