@@ -18,6 +18,7 @@ $stats = $userService->getUserStats($userId);
 $achCount = $userService->getAchievementCount($userId);
 $reviews = $userService->getRecentReviews($userId, 5);
 $watchlist = $userService->getWatchlist($userId, 12);
+$watchedMovies = $userService->getWatchedMovies($userId, 18);
 $achievements = $userService->getAchievements($userId);
 $followersCount = $userService->getFollowersCount($userId);
 $followingCount = $userService->getFollowingCount($userId);
@@ -422,6 +423,89 @@ $followingCount = $userService->getFollowingCount($userId);
             </section>
           </div>
         </div>
+
+        <!-- Watched Movies Section - Full Width -->
+        <section class="mb-12">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl sm:text-2xl font-bold flex items-center">
+              <i class="fas fa-check-circle mr-3 text-green-400"></i>Watched Movies
+            </h2>
+            <span class="text-xs sm:text-sm text-gray-400 bg-gray-800 px-2 sm:px-3 py-1 rounded-full"><?= $stats['movies_watched'] ?> movies</span>
+          </div>
+
+          <?php if (empty($watchedMovies)): ?>
+            <div class="glass p-6 sm:p-8 rounded-xl text-center">
+              <i class="fas fa-film text-4xl sm:text-6xl text-gray-600 mb-4"></i>
+              <h3 class="text-lg sm:text-xl font-semibold text-gray-400 mb-2">No movies watched yet</h3>
+              <p class="text-sm sm:text-base text-gray-500">Start watching movies to build your collection!</p>
+            </div>
+          <?php else: ?>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              <?php
+              foreach (array_slice($watchedMovies, 0, 18) as $index => $movie):
+              ?>
+                <a href="movie.php?id=<?= htmlspecialchars($movie['movie_id']) ?>" class="group cursor-pointer">
+                  <div class="relative rounded-lg overflow-hidden mb-3">
+                    <img src="<?= getTMDBImageUrl($movie['poster_path'], 'w300') ?>"
+                      alt="<?= htmlspecialchars($movie['title']) ?>"
+                      class="w-full h-48 sm:h-52 md:h-56 lg:h-48 object-cover transition-transform group-hover:scale-105">
+
+                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center glass">
+                        <i class="fas fa-play text-white text-sm"></i>
+                      </button>
+                    </div>
+
+
+                    <!-- User Rating (if available) -->
+                    <?php if (!empty($movie['user_rating'])): ?>
+                      <div class="absolute top-2 right-2 glass px-1.5 py-0.5 rounded text-xs">
+                        <i class="fas fa-star text-yellow-400 mr-1"></i>
+                        <?= number_format($movie['user_rating'], 1) ?>
+                      </div>
+                    <?php elseif ($movie['vote_average']): ?>
+                      <div class="absolute top-2 right-2 glass px-1.5 py-0.5 rounded text-xs">
+                        <i class="fas fa-star text-yellow-400 mr-1"></i>
+                        <?= number_format($movie['vote_average'], 1) ?>
+                      </div>
+                    <?php endif; ?>
+                  </div>
+
+                  <h3 class="text-xs sm:text-sm font-medium group-hover:text-gray-300 transition-colors mb-1">
+                    <span class="block sm:hidden">
+                      <?= strlen($movie['title']) > 10 ? substr($movie['title'], 0, 10) . '...' : $movie['title'] ?>
+                    </span>
+                    <span class="hidden sm:block md:hidden">
+                      <?= strlen($movie['title']) > 12 ? substr($movie['title'], 0, 12) . '...' : $movie['title'] ?>
+                    </span>
+                    <span class="hidden md:block lg:hidden">
+                      <?= strlen($movie['title']) > 13 ? substr($movie['title'], 0, 13) . '...' : $movie['title'] ?>
+                    </span>
+                    <span class="hidden lg:block xl:hidden">
+                      <?= strlen($movie['title']) > 10 ? substr($movie['title'], 0, 10) . '...' : $movie['title'] ?>
+                    </span>
+                    <span class="hidden xl:block">
+                      <?= strlen($movie['title']) > 12 ? substr($movie['title'], 0, 12) . '...' : $movie['title'] ?>
+                    </span>
+                  </h3>
+
+                  <?php if ($movie['release_date']): ?>
+                    <p class="text-xs text-gray-500"><?= date('Y', strtotime($movie['release_date'])) ?></p>
+                  <?php endif; ?>
+
+                </a>
+              <?php endforeach; ?>
+            </div>
+
+            <?php if (count($watchedMovies) > 16): ?>
+              <div class="text-center mt-6">
+                <button class="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 font-medium">
+                  <i class="fas fa-eye mr-2"></i>View All Watched Movies
+                </button>
+              </div>
+            <?php endif; ?>
+          <?php endif; ?>
+        </section>
 
         <!-- Full Width Sections Below -->
         <div class="space-y-12">

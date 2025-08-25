@@ -147,4 +147,27 @@ class UserService
     $stmt->execute([$id]);
     return (int)$stmt->fetchColumn();
   }
+
+  /**
+   * Fetch user's watched movies
+   *
+   * @param int $id
+   * @param int $limit
+   * @return array
+   */
+  public function getWatchedMovies(int $id, int $limit = 16): array
+  {
+    $limit = (int)$limit;
+    $sql = 'SELECT ms.date_watched, mc.movie_id, mc.title, mc.poster_path, mc.vote_average, mc.release_date,
+                   mr.rating as user_rating
+            FROM movie_status ms
+            JOIN movie_cache mc ON ms.movie_id = mc.movie_id
+            LEFT JOIN movie_ratings mr ON ms.user_id = mr.user_id AND ms.movie_id = mr.movie_id
+            WHERE ms.user_id = ? AND ms.status = ?
+            ORDER BY ms.date_watched DESC
+            LIMIT ' . $limit;
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([$id, 'watched']);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
 }
