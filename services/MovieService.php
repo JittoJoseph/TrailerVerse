@@ -38,15 +38,18 @@ class MovieService
 
   private function updateMovieCache($movies)
   {
+    // Filter out adult movies
+    $movies = array_filter($movies, fn($movie) => !($movie['adult'] ?? false));
+
     // Prepare insert statement with named placeholders
-    $sql = 'INSERT INTO movie_cache (movie_id, title, overview, poster_path, backdrop_path, release_date, runtime, vote_average, vote_count, genre_ids, cached_at)
-            VALUES (:id, :title, :overview, :poster, :backdrop, :release, :runtime, :avg, :count, :genres, NOW())
+    $sql = 'INSERT INTO movie_cache (movie_id, title, overview, poster_path, backdrop_path, release_date, runtime, vote_average, vote_count, genre_ids, trending_order, cached_at)
+            VALUES (:id, :title, :overview, :poster, :backdrop, :release, :runtime, :avg, :count, :genres, :order, NOW())
             ON DUPLICATE KEY UPDATE
               title = VALUES(title), overview = VALUES(overview), poster_path = VALUES(poster_path),
               backdrop_path = VALUES(backdrop_path), release_date = VALUES(release_date), runtime = COALESCE(VALUES(runtime), runtime),
-              vote_average = VALUES(vote_average), vote_count = VALUES(vote_count), genre_ids = VALUES(genre_ids), cached_at = NOW()';
+              vote_average = VALUES(vote_average), vote_count = VALUES(vote_count), genre_ids = VALUES(genre_ids), trending_order = VALUES(trending_order), cached_at = NOW()';
     $stmt = $this->db->prepare($sql);
-    foreach (array_slice($movies, 0, 20) as $movie) {
+    foreach (array_slice($movies, 0, 20) as $index => $movie) {
       $stmt->execute([
         ':id' => $movie['id'],
         ':title' => $movie['title'],
@@ -58,6 +61,7 @@ class MovieService
         ':avg' => $movie['vote_average'] ?? 0,
         ':count' => $movie['vote_count'] ?? 0,
         ':genres' => json_encode($movie['genre_ids'] ?? []),
+        ':order' => $index,
       ]);
     }
   }
@@ -83,7 +87,7 @@ class MovieService
   // Fetch cached movies from database and format
   private function getCachedMovies()
   {
-    $stmt = $this->db->prepare("SELECT * FROM movie_cache ORDER BY cached_at DESC LIMIT 20");
+    $stmt = $this->db->prepare("SELECT * FROM movie_cache ORDER BY trending_order ASC LIMIT 20");
     $stmt->execute();
     $rows = $stmt->fetchAll();
     return $this->formatMovies($rows);
@@ -139,8 +143,8 @@ class MovieService
   }
   private function updateMovieDetailCache(array $movie)
   {
-    $sql = 'INSERT INTO movie_cache (movie_id, title, overview, poster_path, backdrop_path, release_date, runtime, vote_average, vote_count, genre_ids, cached_at)
-            VALUES (:id, :title, :overview, :poster, :backdrop, :release, :runtime, :avg, :count, :genres, NOW())
+    $sql = 'INSERT INTO movie_cache (movie_id, title, overview, poster_path, backdrop_path, release_date, runtime, vote_average, vote_count, genre_ids, trending_order, cached_at)
+            VALUES (:id, :title, :overview, :poster, :backdrop, :release, :runtime, :avg, :count, :genres, 0, NOW())
             ON DUPLICATE KEY UPDATE
               title = VALUES(title), overview = VALUES(overview), poster_path = VALUES(poster_path),
               backdrop_path = VALUES(backdrop_path), release_date = VALUES(release_date), runtime = VALUES(runtime),

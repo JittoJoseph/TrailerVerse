@@ -53,6 +53,7 @@ CREATE TABLE movie_cache (
     director VARCHAR(100),
     cast_info JSON,
     trailer_key VARCHAR(50),
+    trending_order INT DEFAULT 0,
     cached_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
