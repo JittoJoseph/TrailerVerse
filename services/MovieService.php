@@ -87,7 +87,7 @@ class MovieService
   // Fetch cached movies from database and format
   private function getCachedMovies()
   {
-    $stmt = $this->db->prepare("SELECT * FROM movie_cache ORDER BY trending_order ASC LIMIT 20");
+    $stmt = $this->db->prepare("SELECT * FROM movie_cache WHERE movie_id != 7451 ORDER BY trending_order ASC LIMIT 20");
     $stmt->execute();
     $rows = $stmt->fetchAll();
     return $this->formatMovies($rows);
