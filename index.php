@@ -51,14 +51,21 @@ $featuredMovie = $featuredCandidates ? $featuredCandidates[array_rand($featuredC
               <?= substr($featuredMovie['overview'], 0, 150) ?>...
             </p>
             <div class="flex items-center space-x-4">
-              <button class="px-6 py-3 bg-white text-slate-950 rounded-lg hover:bg-gray-100 transition-colors font-medium">
-                <i class="fas fa-play mr-2"></i>
-                Watch Trailer
-              </button>
-              <button class="px-6 py-3 glass rounded-lg hover:bg-white/10 transition-colors">
-                <i class="fas fa-plus mr-2"></i>
-                My List
-              </button>
+              <a href="movie.php?id=<?= htmlspecialchars($featuredMovie['id']) ?>" class="px-6 py-3 bg-white text-slate-950 rounded-lg hover:bg-gray-100 transition-colors font-medium inline-block">
+                <i class="fas fa-info-circle mr-2"></i>
+                Watch Now
+              </a>
+              <?php if (isset($_SESSION['user_id'])): ?>
+                <button class="px-6 py-3 glass rounded-lg hover:bg-white/10 transition-colors">
+                  <i class="fas fa-plus mr-2"></i>
+                  My List
+                </button>
+              <?php else: ?>
+                <a href="auth/signin.php" class="px-6 py-3 glass rounded-lg hover:bg-white/10 transition-colors inline-block">
+                  <i class="fas fa-plus mr-2"></i>
+                  My List
+                </a>
+              <?php endif; ?>
             </div>
           </div>
 
