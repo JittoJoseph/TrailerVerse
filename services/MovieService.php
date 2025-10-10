@@ -346,13 +346,7 @@ class MovieService
 
   public function searchMovies($query, $page = 1)
   {
-    // Always return cached search results immediately
-    $stmt = $this->db->prepare("SELECT * FROM movie_cache WHERE title LIKE ? ORDER BY vote_average DESC, vote_count DESC LIMIT 20");
-    $stmt->execute(['%' . $query . '%']);
-    $cached = $stmt->fetchAll();
-    $cachedResults = $this->formatMovies($cached)['results'];
-
-    // Update cache in background with fresh API data
+    // Try to get fresh data from API first
     $url = TMDB_BASE_URL . "/search/movie?api_key=" . TMDB_API_KEY . "&query=" . urlencode($query) . "&page=" . $page . "&include_adult=false";
     $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
     if (!$response && function_exists('curl_version')) {
@@ -362,15 +356,44 @@ class MovieService
       $response = curl_exec($ch);
       curl_close($ch);
     }
+
     if ($response) {
       $data = json_decode($response, true);
       if (!empty($data['results'])) {
-        // Cache search results without affecting trending order
-        $this->updateMovieCacheGeneral($data['results']);
+        // Filter out adult content and blocked movies
+        $filtered = array_filter($data['results'], fn($m) => !($m['adult'] ?? false) && $m['id'] != 7451);
+
+        // Cache the search results
+        $this->updateMovieCacheGeneral($filtered);
+
+        // Format and return fresh API results
+        $formatted = array_map(function ($movie) {
+          return [
+            'id' => $movie['id'],
+            'title' => $movie['title'],
+            'overview' => $movie['overview'],
+            'poster_path' => $movie['poster_path'],
+            'backdrop_path' => $movie['backdrop_path'],
+            'release_date' => $movie['release_date'],
+            'vote_average' => $movie['vote_average'],
+            'vote_count' => $movie['vote_count']
+          ];
+        }, array_slice($filtered, 0, 20));
+
+        return [
+          'results' => $formatted,
+          'total_pages' => $data['total_pages'] ?? 1,
+          'page' => $data['page'] ?? 1
+        ];
       }
     }
 
-    // Always return cached results for immediate display
+    // API failed, fall back to cached results
+    $stmt = $this->db->prepare("SELECT * FROM movie_cache WHERE title LIKE ? AND movie_id != 7451 ORDER BY vote_average DESC, vote_count DESC LIMIT 20");
+    $stmt->execute(['%' . $query . '%']);
+    $cached = $stmt->fetchAll();
+    $cachedResults = $this->formatMovies($cached)['results'];
+
     return ['results' => $cachedResults, 'total_pages' => 1, 'page' => 1];
   }
 
