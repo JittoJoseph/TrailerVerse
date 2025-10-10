@@ -32,11 +32,8 @@ class UserService
    */
   public function getUserStats(int $id): array
   {
-    $stmt = $this->db->prepare('SELECT * FROM user_stats_view WHERE user_id = ?');
-    $stmt->execute([$id]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    // Return view data or defaults
-    return $row ?: [
+    // Get basic counts
+    $stats = [
       'movies_watched'      => 0,
       'movies_in_watchlist' => 0,
       'reviews_written'     => 0,
@@ -45,6 +42,55 @@ class UserService
       'favorite_genre_name' => null,
       'achievement_points'  => 0,
     ];
+
+    // Movies watched count
+    $stmt = $this->db->prepare('SELECT COUNT(*) as cnt FROM movie_status WHERE user_id = ? AND status = ?');
+    $stmt->execute([$id, 'watched']);
+    $stats['movies_watched'] = (int)$stmt->fetchColumn();
+
+    // Movies in watchlist count
+    $stmt = $this->db->prepare('SELECT COUNT(*) as cnt FROM movie_status WHERE user_id = ? AND status = ?');
+    $stmt->execute([$id, 'want_to_watch']);
+    $stats['movies_in_watchlist'] = (int)$stmt->fetchColumn();
+
+    // Reviews written count
+    $stmt = $this->db->prepare('SELECT COUNT(*) as cnt FROM movie_reviews WHERE user_id = ?');
+    $stmt->execute([$id]);
+    $stats['reviews_written'] = (int)$stmt->fetchColumn();
+
+    // Ratings given count and average
+    $stmt = $this->db->prepare('SELECT COUNT(*) as cnt, AVG(rating) as avg_rating FROM movie_ratings WHERE user_id = ?');
+    $stmt->execute([$id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stats['ratings_given'] = (int)($row['cnt'] ?? 0);
+    $stats['average_rating'] = (float)($row['avg_rating'] ?? 0.00);
+
+    // Achievement points
+    $stmt = $this->db->prepare('
+      SELECT SUM(a.points) as total_points
+      FROM user_achievements ua
+      JOIN achievements a ON ua.achievement_id = a.id
+      WHERE ua.user_id = ?
+    ');
+    $stmt->execute([$id]);
+    $stats['achievement_points'] = (int)($stmt->fetchColumn() ?? 0);
+
+    // Favorite genre (most common genre from watched movies)
+    $stmt = $this->db->prepare('
+      SELECT g.name, COUNT(*) as genre_count
+      FROM movie_status ms
+      JOIN movie_cache mc ON ms.movie_id = mc.movie_id
+      JOIN genres g ON JSON_CONTAINS(mc.genre_ids, JSON_ARRAY(CAST(g.id AS UNSIGNED)))
+      WHERE ms.user_id = ? AND ms.status = ?
+      GROUP BY g.id, g.name
+      ORDER BY genre_count DESC
+      LIMIT 1
+    ');
+    $stmt->execute([$id, 'watched']);
+    $genreRow = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stats['favorite_genre_name'] = $genreRow['name'] ?? null;
+
+    return $stats;
   }
 
   /**
