@@ -31,7 +31,7 @@ class MovieService
       if (!empty($data['results'])) {
         $this->updateMovieCache($data['results']);
         // Return fresh API data formatted to match cached format
-        $filtered = array_filter($data['results'], fn($m) => !($m['adult'] ?? false));
+        $filtered = array_filter($data['results'], fn($m) => !($m['adult'] ?? false) && $m['id'] != 7451);
         $formatted = array_map(function ($movie) {
           return [
             'id' => $movie['id'],
@@ -53,8 +53,8 @@ class MovieService
 
   private function updateMovieCache($movies)
   {
-    // Filter out adult movies
-    $movies = array_filter($movies, fn($movie) => !($movie['adult'] ?? false));
+    // Filter out adult movies and blocked movies
+    $movies = array_filter($movies, fn($movie) => !($movie['adult'] ?? false) && $movie['id'] != 7451);
 
     // Prepare insert statement with named placeholders
     $sql = 'INSERT INTO movie_cache (movie_id, title, overview, poster_path, backdrop_path, release_date, runtime, vote_average, vote_count, genre_ids, trailer_key, trending_order, cached_at)
@@ -85,8 +85,8 @@ class MovieService
 
   private function updateMovieCacheGeneral($movies)
   {
-    // Filter out adult movies
-    $movies = array_filter($movies, fn($movie) => !($movie['adult'] ?? false));
+    // Filter out adult movies and blocked movies
+    $movies = array_filter($movies, fn($movie) => !($movie['adult'] ?? false) && $movie['id'] != 7451);
 
     // Prepare insert statement with named placeholders - DON'T touch trending_order for trending movies
     $sql = 'INSERT INTO movie_cache (movie_id, title, overview, poster_path, backdrop_path, release_date, runtime, vote_average, vote_count, genre_ids, trailer_key, trending_order, cached_at)
@@ -328,8 +328,8 @@ class MovieService
     if ($response) {
       $data = json_decode($response, true);
       if (!empty($data['results'])) {
-        // Filter out adult content and limit to 12 movies
-        $filtered = array_filter($data['results'], fn($m) => !($m['adult'] ?? false));
+        // Filter out adult content and blocked movies, then limit to 12 movies
+        $filtered = array_filter($data['results'], fn($m) => !($m['adult'] ?? false) && $m['id'] != 7451);
         $similarMovies = array_slice($filtered, 0, 12);
 
         // Cache the similar movies with the movie details
