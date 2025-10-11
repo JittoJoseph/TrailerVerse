@@ -29,7 +29,7 @@ $featuredMovie = $featuredCandidates ? $featuredCandidates[array_rand($featuredC
   <?php include 'includes/header.php'; ?>
 
   <!-- Main Content -->
-  <div class="pt-24 grid lg:grid-cols-4 gap-8 max-w-7xl mx-auto px-6">
+  <div class="pt-8 lg:pt-24 grid lg:grid-cols-4 gap-8 max-w-7xl mx-auto px-6">
 
     <!-- Left Content (3 columns) -->
     <div class="lg:col-span-3">

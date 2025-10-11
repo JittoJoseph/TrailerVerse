@@ -5,7 +5,7 @@
 <header class="absolute top-0 left-0 w-full z-30">
   <div class="max-w-7xl mx-auto px-6 py-3">
     <!-- Mobile Layout (Stacked) -->
-    <div class="md:hidden space-y-4">
+    <div class="lg:hidden space-y-4">
       <!-- Top Row: Logo and Menu Button -->
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
@@ -20,7 +20,7 @@
       </div>
 
       <!-- Expandable Menu -->
-      <div id="mobile-menu-detail" class="hidden space-y-4 pb-4">
+      <div id="mobile-menu-detail" class="overflow-hidden max-h-0 transition-all duration-300 ease-in-out">
         <!-- Mobile Search -->
         <form action="explore.php" method="GET" class="w-full relative">
           <input type="text"
@@ -72,7 +72,7 @@
     </div>
 
     <!-- Desktop Layout (Horizontal) -->
-    <div class="hidden md:flex items-center justify-between gap-8">
+    <div class="hidden lg:flex items-center justify-between gap-8">
       <div class="flex items-center space-x-3">
         <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
           <i class="fas fa-film text-slate-950"></i>
@@ -124,16 +124,42 @@
 document.addEventListener('DOMContentLoaded', function() {
   const mobileMenuButton = document.getElementById('mobile-menu-button-detail');
   const mobileMenu = document.getElementById('mobile-menu-detail');
+  const body = document.body;
+
+  // Set initial collapsed header height for mobile
+  if (window.innerWidth < 1024) {
+    body.style.paddingTop = '64px';
+  }
 
   if (mobileMenuButton && mobileMenu) {
+    let isExpanded = false;
+    const collapsedHeight = 64; // Approximate collapsed header height
+
     mobileMenuButton.addEventListener('click', function() {
-      const isHidden = mobileMenu.classList.contains('hidden');
-      if (isHidden) {
-        mobileMenu.classList.remove('hidden');
+      isExpanded = !isExpanded;
+
+      if (isExpanded) {
+        // First make menu visible to calculate height
+        mobileMenu.style.maxHeight = 'none';
+        const expandedMenuHeight = mobileMenu.scrollHeight;
+        mobileMenu.style.maxHeight = '0px';
+
+        // Trigger reflow
+        mobileMenu.offsetHeight;
+
+        // Now animate to expanded height
+        mobileMenu.style.maxHeight = expandedMenuHeight + 'px';
         mobileMenuButton.innerHTML = '<i class="fas fa-times text-white text-xl"></i>';
+
+        // Push content down by the expanded menu height
+        body.style.paddingTop = (collapsedHeight + expandedMenuHeight) + 'px';
       } else {
-        mobileMenu.classList.add('hidden');
+        // Collapse menu
+        mobileMenu.style.maxHeight = '0px';
         mobileMenuButton.innerHTML = '<i class="fas fa-bars text-white text-xl"></i>';
+
+        // Reset to collapsed height
+        body.style.paddingTop = collapsedHeight + 'px';
       }
     });
   }
