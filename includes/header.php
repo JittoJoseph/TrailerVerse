@@ -2,7 +2,7 @@
 <nav id="main-nav" class="fixed top-0 w-full z-50 glass transition-all duration-300 ease-in-out">
   <div class="max-w-7xl mx-auto px-6 py-3">
     <!-- Mobile Layout (Stacked) -->
-    <div class="md:hidden">
+    <div class="lg:hidden">
       <!-- Top Row: Logo and Menu Button -->
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
@@ -71,7 +71,7 @@
     </div>
 
     <!-- Desktop Layout (Horizontal) -->
-    <div class="hidden md:flex items-center justify-between gap-8">
+    <div class="hidden lg:flex items-center justify-between gap-8">
       <div class="flex items-center space-x-3">
         <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
           <i class="fas fa-film text-slate-950"></i>
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const body = document.body;
 
   // Set initial collapsed header height for mobile
-  if (window.innerWidth < 768) {
+  if (window.innerWidth < 1024) {
     body.style.paddingTop = '64px';
   }
 

@@ -22,7 +22,7 @@ $genres = array_filter($genreService->getGenres(), function ($g) {
   <?php include 'includes/header.php'; ?>
 
   <!-- Main Content -->
-  <div class="pt-24 max-w-7xl mx-auto px-6 pb-12">
+  <div class="pt-8 lg:pt-24 max-w-7xl mx-auto px-6 pb-12">
     <h1 class="text-3xl font-bold mb-8">Browse Genres</h1>
 
     <?php if (!empty($genres)): ?>
