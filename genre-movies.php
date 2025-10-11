@@ -33,7 +33,8 @@ if ($genreId) {
 <body class="bg-slate-950 text-white min-h-screen">
   <?php include 'includes/header.php'; ?>
 
-  <div class="pt-24 max-w-7xl mx-auto px-6 pb-12">
+    <!-- Main Content -->
+  <div class="pt-8 lg:pt-24 max-w-7xl mx-auto px-6 pb-12">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold"><?= htmlspecialchars($genreName ?: 'Genre') ?> Movies</h1>
       <a href="genres.php" class="text-blue-400 hover:underline">&larr; Back to Genres</a>

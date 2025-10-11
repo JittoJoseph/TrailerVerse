@@ -124,7 +124,7 @@ if (isset($_SESSION['user_id'])) {
   </div>
 
   <!-- Details Tabs -->
-  <div class="max-w-7xl mx-auto px-6 py-12">
+  <div class="max-w-7xl mx-auto px-6 pt-8 lg:pt-24 pb-12">
     <ul id="tabs" class="flex space-x-8 border-b border-gray-700">
       <li><button data-tab="details" class="pb-2 text-lg text-white border-b-2 border-white hover:border-white">Details</button></li>
       <li><button data-tab="reviews" class="pb-2 text-lg text-gray-400 border-b-2 border-transparent hover:text-white hover:border-white">Reviews</button></li>

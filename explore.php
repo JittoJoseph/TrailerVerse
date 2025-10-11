@@ -52,7 +52,7 @@ $years = range($currentYear, 1950);
   <?php include 'includes/header.php'; ?>
 
   <!-- Main Content -->
-  <div class="pt-24 max-w-7xl mx-auto px-6 pb-12">
+  <div class="pt-8 lg:pt-24 max-w-7xl mx-auto px-6 pb-12">
     
     <!-- Page Header -->
     <div class="mb-8">
