@@ -103,67 +103,8 @@ if (isset($_SESSION['user_id'])) {
     </div>
   </section>
 
-  <!-- Movie Info Section (Shown when trailer is playing) -->
-  <div id="movie-info-section" class="hidden max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
-    <div class="glass rounded-2xl p-6 md:p-8 border border-white/10">
-      <div class="flex flex-col lg:flex-row lg:items-start lg:space-x-8 space-y-6 lg:space-y-0">
-        <img src="<?= getTMDBPosterUrl($movie['poster_path'] ?? '') ?>" alt="<?= htmlspecialchars($movie['title']) ?>" class="w-32 md:w-48 lg:w-56 rounded-2xl shadow-2xl border border-white/10 mx-auto lg:mx-0">
-        <div class="flex-1 text-center lg:text-left">
-          <h2 class="text-2xl md:text-4xl font-bold gradient-text mb-4 md:mb-6"><?= htmlspecialchars($movie['title'] ?? '') ?></h2>
-          <p class="text-gray-300 leading-relaxed mb-4 md:mb-6 text-sm md:text-base max-w-3xl mx-auto lg:mx-0"><?= htmlspecialchars($movie['overview'] ?? '') ?></p>
-          
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8 max-w-2xl mx-auto lg:mx-0">
-            <div class="glass rounded-xl p-3 md:p-4 text-center">
-              <div class="text-xl md:text-2xl font-bold text-white mb-1">
-                <?= ($movie['runtime'] ?? 0) ?>m
-              </div>
-              <div class="text-xs md:text-sm text-gray-400 uppercase tracking-wide">Runtime</div>
-            </div>
-            
-            <div class="glass rounded-xl p-3 md:p-4 text-center">
-              <div class="text-xl md:text-2xl font-bold text-white mb-1 flex items-center justify-center">
-                <i class="fas fa-star text-yellow-400 mr-1"></i>
-                <?= number_format($movie['vote_average'], 1) ?>
-              </div>
-              <div class="text-xs md:text-sm text-gray-400 uppercase tracking-wide">Rating</div>
-            </div>
-            
-            <div class="glass rounded-xl p-3 md:p-4 text-center">
-              <div class="text-xl md:text-2xl font-bold text-white mb-1">
-                <?= date('Y', strtotime($movie['release_date'] ?? 'now')) ?>
-              </div>
-              <div class="text-xs md:text-sm text-gray-400 uppercase tracking-wide">Year</div>
-            </div>
-            
-            <div class="glass rounded-xl p-3 md:p-4 text-center">
-              <div class="text-xl md:text-2xl font-bold text-white mb-1">
-                <?= htmlspecialchars($movie['original_language'] ?? 'EN') ?>
-              </div>
-              <div class="text-xs md:text-sm text-gray-400 uppercase tracking-wide">Language</div>
-            </div>
-          </div>
-          
-          <div class="flex flex-wrap justify-center lg:justify-start gap-3 md:gap-4">
-            <?php if (isset($_SESSION['user_id'])): ?>
-              <button onclick="document.getElementById('btn-watchlist').click()" class="flex items-center px-4 py-2 md:px-6 md:py-3 text-sm md:text-base <?php echo $inWatchlist ? 'bg-red-600 hover:bg-red-700' : 'glass hover:bg-white/10'; ?> rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
-                <i class="fas fa-list mr-2"></i><span class="hidden sm:inline"><?= $inWatchlist ? 'Remove from List' : 'Add to Watchlist' ?></span><span class="sm:hidden">List</span>
-              </button>
-              <button onclick="document.getElementById('btn-watched').click()" class="flex items-center px-4 py-2 md:px-6 md:py-3 text-sm md:text-base <?php echo $watched ? 'bg-green-600 hover:bg-green-700' : 'glass hover:bg-white/10'; ?> rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
-                <i class="fas fa-check mr-2"></i><span class="hidden sm:inline"><?= $watched ? 'Unmark Watched' : 'Mark as Watched' ?></span><span class="sm:hidden">Watched</span>
-              </button>
-            <?php else: ?>
-              <a href="auth/signin.php" class="flex items-center px-4 py-2 md:px-6 md:py-3 text-sm md:text-base bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
-                <i class="fas fa-sign-in-alt mr-2"></i>Sign in to manage list
-              </a>
-            <?php endif; ?>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Details Tabs -->
-  <div class="max-w-7xl mx-auto px-4 md:px-6 pt-6 md:pt-8 lg:pt-24 pb-12">
+  <div id="details-tabs-section" class="max-w-7xl mx-auto px-4 md:px-6 pt-6 md:pt-8 lg:pt-24 pb-12">
     <ul id="tabs" class="flex space-x-4 md:space-x-8 border-b border-gray-700 overflow-x-auto">
       <li><button data-tab="details" class="pb-2 text-base md:text-lg text-white border-b-2 border-white hover:border-white whitespace-nowrap">Details</button></li>
       <li><button data-tab="reviews" class="pb-2 text-base md:text-lg text-gray-400 border-b-2 border-transparent hover:text-white hover:border-white whitespace-nowrap">Reviews</button></li>
@@ -509,7 +450,6 @@ if (isset($_SESSION['user_id'])) {
     const backdropContainer = document.getElementById('backdrop-container');
     const trailerContainer = document.getElementById('trailer-container');
     const movieInfoOverlay = document.getElementById('movie-info-overlay');
-    const movieInfoSection = document.getElementById('movie-info-section');
     const trailerIframe = document.getElementById('trailer-iframe');
 
     if (playBtn && trailerKey) {
@@ -525,7 +465,6 @@ if (isset($_SESSION['user_id'])) {
           backdropContainer.style.pointerEvents = 'none';
           trailerContainer.style.opacity = '1';
           trailerContainer.style.pointerEvents = 'auto';
-          movieInfoSection.classList.remove('hidden');
         }, 500);
       });
     }
@@ -543,7 +482,6 @@ if (isset($_SESSION['user_id'])) {
           backdropContainer.style.opacity = '1';
           backdropContainer.style.pointerEvents = 'auto';
           movieInfoOverlay.style.opacity = '1';
-          movieInfoSection.classList.add('hidden');
         }, 500);
       });
     }
