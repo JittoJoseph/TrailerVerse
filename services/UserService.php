@@ -285,7 +285,7 @@ class UserService
   }
 
   /**
-   * Get activity feed for a user (their own + people they follow)
+   * Get activity feed for a user (all public users with mixed ordering)
    */
   public function getFeed(int $userId, int $limit = 20, int $offset = 0): array
   {
@@ -317,13 +317,11 @@ class UserService
             SELECT user_id, username, profile_picture, activity_type, movie_id, movie_title, poster_path, rating, ts AS created_at
             FROM ranked
             WHERE rn = 1
-              AND (user_id = :uid OR user_id IN (SELECT following_id FROM user_follows WHERE follower_id = :uid))
-            ORDER BY created_at DESC
+            ORDER BY DATE_ADD(created_at, INTERVAL FLOOR(RAND() * 86400) SECOND) DESC
             LIMIT :lim OFFSET :off";
 
     $stmt = $this->db->prepare($sql);
     // Bind values explicitly. MySQL requires integer bind for LIMIT/OFFSET.
-    $stmt->bindValue(':uid', $userId, PDO::PARAM_INT);
     $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
     $stmt->execute();
