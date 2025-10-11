@@ -31,10 +31,10 @@
           <!-- Mobile Navigation Links -->
           <div class="grid grid-cols-2 gap-3">
             <a href="index.php" class="flex items-center justify-center px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-              <i class="fas fa-home mr-2"></i>Discover
+              <i class="fas fa-compass mr-2"></i>Discover
             </a>
             <a href="explore.php" class="flex items-center justify-center px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
-              <i class="fas fa-compass mr-2"></i>Explore
+              <i class="fas fa-search mr-2"></i>Explore
             </a>
             <a href="genres.php" class="flex items-center justify-center px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
               <i class="fas fa-tags mr-2"></i>Genres
