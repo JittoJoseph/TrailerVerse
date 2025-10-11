@@ -147,13 +147,9 @@ $followingCount = $userService->getFollowingCount($profileUserId);
             <div class="flex justify-center mb-4">
               <div class="relative">
                 <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-700 border-4 border-white shadow-xl">
-                  <?php if ($user['profile_picture']): ?>
-                    <img src="<?= htmlspecialchars($user['profile_picture']) ?>" alt="<?= htmlspecialchars($user['username']) ?> avatar" class="object-cover w-full h-full">
-                  <?php else: ?>
-                    <div class="flex items-center justify-center w-full h-full bg-gradient-to-br from-blue-500 to-purple-600">
-                      <i class="fas fa-user text-white text-3xl"></i>
-                    </div>
-                  <?php endif; ?>
+                  <div class="flex items-center justify-center w-full h-full bg-gradient-to-br from-blue-500 to-purple-600">
+                    <i class="fas fa-user text-white text-3xl"></i>
+                  </div>
                 </div>
                 <!-- Online Status Indicator -->
                 <div class="absolute bottom-1 right-1 w-5 h-5 bg-green-500 rounded-full border-3 border-white"></div>
@@ -265,13 +261,9 @@ $followingCount = $userService->getFollowingCount($profileUserId);
             <!-- Profile Avatar -->
             <div class="relative flex-shrink-0">
               <div class="w-40 h-40 rounded-full overflow-hidden bg-gray-700 border-4 border-white shadow-xl">
-                <?php if ($user['profile_picture']): ?>
-                  <img src="<?= htmlspecialchars($user['profile_picture']) ?>" alt="<?= htmlspecialchars($user['username']) ?> avatar" class="object-cover w-full h-full">
-                <?php else: ?>
-                  <div class="flex items-center justify-center w-full h-full bg-gradient-to-br from-blue-500 to-purple-600">
-                    <i class="fas fa-user text-white text-4xl"></i>
-                  </div>
-                <?php endif; ?>
+                <div class="flex items-center justify-center w-full h-full bg-gradient-to-br from-blue-500 to-purple-600">
+                  <i class="fas fa-user text-white text-4xl"></i>
+                </div>
               </div>
               <!-- Online Status Indicator -->
               <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white"></div>
@@ -667,14 +659,6 @@ $followingCount = $userService->getFollowingCount($profileUserId);
               </a>
             <?php endforeach; ?>
           </div>
-
-          <?php if (count($watchedMovies) > 16): ?>
-            <div class="text-center mt-6">
-              <button class="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 font-medium">
-                <i class="fas fa-eye mr-2"></i>View All Watched Movies
-              </button>
-            </div>
-          <?php endif; ?>
         <?php endif; ?>
       </section>
 
@@ -689,9 +673,6 @@ $followingCount = $userService->getFollowingCount($profileUserId);
             </h2>
             <div class="flex items-center space-x-4">
               <span class="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-full"><?= count($reviews) ?> reviews</span>
-              <button class="text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium">
-                View All <i class="fas fa-arrow-right ml-1"></i>
-              </button>
             </div>
           </div>
           <?php if (empty($reviews)): ?>
