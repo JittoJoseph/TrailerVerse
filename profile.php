@@ -667,14 +667,6 @@ $followingCount = $userService->getFollowingCount($profileUserId);
               </a>
             <?php endforeach; ?>
           </div>
-
-          <?php if (count($watchedMovies) > 16): ?>
-            <div class="text-center mt-6">
-              <button class="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 font-medium">
-                <i class="fas fa-eye mr-2"></i>View All Watched Movies
-              </button>
-            </div>
-          <?php endif; ?>
         <?php endif; ?>
       </section>
 
@@ -689,9 +681,6 @@ $followingCount = $userService->getFollowingCount($profileUserId);
             </h2>
             <div class="flex items-center space-x-4">
               <span class="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-full"><?= count($reviews) ?> reviews</span>
-              <button class="text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium">
-                View All <i class="fas fa-arrow-right ml-1"></i>
-              </button>
             </div>
           </div>
           <?php if (empty($reviews)): ?>
