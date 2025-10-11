@@ -136,15 +136,135 @@ $followingCount = $userService->getFollowingCount($profileUserId);
 
   <?php include './includes/header.php'; ?>
 
-  <div class="pt-16">
+  <div class="pt-0 md:pt-16">
     <!-- Profile Cover Section -->
-    <div class="profile-cover h-64 sm:h-72 lg:h-80 relative">
+    <div class="profile-cover h-[28rem] sm:h-72 lg:h-80 relative">
       <div class="absolute inset-0 z-10 flex items-end">
-        <div class="max-w-6xl mx-auto px-6 w-full pb-6">
-          <div class="flex flex-col md:flex-row items-start md:items-start space-y-4 md:space-y-0 md:space-x-6">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 w-full pb-4 sm:pb-6 pt-12 sm:pt-6">
+          <!-- Mobile Layout (Centered Avatar + Info Below) -->
+          <div class="block md:hidden">
+            <!-- Centered Avatar -->
+            <div class="flex justify-center mb-4">
+              <div class="relative">
+                <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-700 border-4 border-white shadow-xl">
+                  <?php if ($user['profile_picture']): ?>
+                    <img src="<?= htmlspecialchars($user['profile_picture']) ?>" alt="<?= htmlspecialchars($user['username']) ?> avatar" class="object-cover w-full h-full">
+                  <?php else: ?>
+                    <div class="flex items-center justify-center w-full h-full bg-gradient-to-br from-blue-500 to-purple-600">
+                      <i class="fas fa-user text-white text-3xl"></i>
+                    </div>
+                  <?php endif; ?>
+                </div>
+                <!-- Online Status Indicator -->
+                <div class="absolute bottom-1 right-1 w-5 h-5 bg-green-500 rounded-full border-3 border-white"></div>
+              </div>
+            </div>
+
+            <!-- Profile Info Centered -->
+            <div class="text-center text-white">
+              <h1 class="text-2xl font-bold mb-2"><?= htmlspecialchars($user['username']) ?></h1>
+              <p class="text-sm text-gray-200 mb-3 max-w-md mx-auto line-clamp-2 leading-relaxed px-2">
+                <?= htmlspecialchars($user['bio'] ?: 'Movie enthusiast exploring cinematic worlds') ?>
+              </p>
+
+              <!-- Badges Row -->
+              <div class="flex flex-wrap justify-center items-center gap-2 mb-4">
+                <!-- Favorite Genre or New User Badge -->
+                <?php if ($stats['favorite_genre_name']): ?>
+                  <span class="px-2 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-medium rounded-full flex items-center space-x-1 shadow-lg">
+                    <i class="fas fa-heart text-xs"></i>
+                    <span>Favorite: <?= htmlspecialchars($stats['favorite_genre_name']) ?></span>
+                  </span>
+                <?php else: ?>
+                  <span class="px-2 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-medium rounded-full flex items-center space-x-1 shadow-lg">
+                    <i class="fas fa-star text-xs"></i>
+                    <span>New User</span>
+                  </span>
+                <?php endif; ?>
+
+                <!-- Profile Status Badge -->
+                <span class="px-2 py-1 bg-gray-700 bg-opacity-80 text-gray-200 text-xs font-medium rounded-full flex items-center space-x-1">
+                  <i class="fas fa-<?= $user['is_public'] ? 'globe' : 'lock' ?> text-xs"></i>
+                  <span><?= $user['is_public'] ? 'Public' : 'Private' ?></span>
+                </span>
+
+                <!-- Member Since Badge -->
+                <span class="px-2 py-1 bg-gray-700 bg-opacity-80 text-gray-200 text-xs font-medium rounded-full flex items-center space-x-1">
+                  <i class="fas fa-calendar text-xs"></i>
+                  <span>Since <?= date('M Y', strtotime($user['created_at'])) ?></span>
+                </span>
+              </div>
+
+              <!-- Quick Stats Row -->
+              <div class="flex flex-wrap justify-center items-center gap-3 mb-4 text-xs">
+                <div class="flex items-center space-x-1">
+                  <div class="w-6 h-6 bg-blue-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-film text-blue-400 text-xs"></i>
+                  </div>
+                  <div class="text-center">
+                    <span class="font-bold text-white block"><?= $stats['movies_watched'] ?></span>
+                    <span class="text-gray-300">watched</span>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <div class="w-6 h-6 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-users text-green-400 text-xs"></i>
+                  </div>
+                  <div class="text-center">
+                    <span class="font-bold text-white block"><?= $followersCount ?></span>
+                    <span class="text-gray-300">followers</span>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <div class="w-6 h-6 bg-purple-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-friends text-purple-400 text-xs"></i>
+                  </div>
+                  <div class="text-center">
+                    <span class="font-bold text-white block"><?= $followingCount ?></span>
+                    <span class="text-gray-300">following</span>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <div class="w-6 h-6 bg-yellow-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-star text-yellow-400 text-xs"></i>
+                  </div>
+                  <div class="text-center">
+                    <span class="font-bold text-white block"><?= $stats['reviews_written'] ?></span>
+                    <span class="text-gray-300">reviews</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex flex-col gap-2">
+                <?php if ($isOwner): ?>
+                  <a href="edit_profile.php" class="px-6 py-2 bg-white text-slate-950 rounded-lg hover:bg-gray-100 transition font-medium shadow-lg text-center text-sm">
+                    <i class="fas fa-edit mr-2"></i>Edit Profile
+                  </a>
+                <?php else: ?>
+                  <button
+                    onclick="toggleFollow(<?= (int)$profileUserId ?>, this)"
+                    data-following="<?= $isFollowing ? '1' : '0' ?>"
+                    class="<?= $isFollowing ? 'glass' : 'bg-white text-slate-950' ?> px-6 py-2 rounded-lg hover:bg-gray-100 transition font-medium shadow-lg text-center text-sm">
+                    <?php if ($isFollowing): ?>
+                      <i class="fas fa-check mr-2"></i>Following
+                    <?php else: ?>
+                      <i class="fas fa-user-plus mr-2"></i>Follow
+                    <?php endif; ?>
+                  </button>
+                <?php endif; ?>
+                <a href="index.php" class="px-6 py-2 bg-gray-800 bg-opacity-80 text-white rounded-lg hover:bg-gray-700 transition font-medium shadow-lg text-center text-sm">
+                  <i class="fas fa-home mr-2"></i>Home
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Desktop Layout (Side by Side) -->
+          <div class="hidden md:flex flex-row items-start space-x-6">
             <!-- Profile Avatar -->
-            <div class="relative">
-              <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden bg-gray-700 border-4 border-white shadow-xl">
+            <div class="relative flex-shrink-0">
+              <div class="w-40 h-40 rounded-full overflow-hidden bg-gray-700 border-4 border-white shadow-xl">
                 <?php if ($user['profile_picture']): ?>
                   <img src="<?= htmlspecialchars($user['profile_picture']) ?>" alt="<?= htmlspecialchars($user['username']) ?> avatar" class="object-cover w-full h-full">
                 <?php else: ?>
