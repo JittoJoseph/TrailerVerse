@@ -68,11 +68,11 @@ class MovieService
     foreach (array_slice($movies, 0, 20) as $index => $movie) {
       $stmt->execute([
         ':id' => $movie['id'],
-        ':title' => $movie['title'],
+        ':title' => $movie['title'] ?? '',
         ':overview' => $movie['overview'] ?? '',
         ':poster' => $movie['poster_path'] ?? '',
         ':backdrop' => $movie['backdrop_path'] ?? '',
-        ':release' => $movie['release_date'] ?? null,
+        ':release' => !empty($movie['release_date']) ? $movie['release_date'] : null,
         ':runtime' => $movie['runtime'] ?? null,
         ':avg' => $movie['vote_average'] ?? 0,
         ':count' => $movie['vote_count'] ?? 0,
@@ -100,11 +100,11 @@ class MovieService
     foreach ($movies as $movie) {
       $stmt->execute([
         ':id' => $movie['id'],
-        ':title' => $movie['title'],
+        ':title' => $movie['title'] ?? '',
         ':overview' => $movie['overview'] ?? '',
         ':poster' => $movie['poster_path'] ?? '',
         ':backdrop' => $movie['backdrop_path'] ?? '',
-        ':release' => $movie['release_date'] ?? null,
+        ':release' => !empty($movie['release_date']) ? $movie['release_date'] : null,
         ':runtime' => $movie['runtime'] ?? null,
         ':avg' => $movie['vote_average'] ?? 0,
         ':count' => $movie['vote_count'] ?? 0,
@@ -208,7 +208,7 @@ class MovieService
       ':overview' => $movie['overview'] ?? '',
       ':poster' => $movie['poster_path'] ?? '',
       ':backdrop' => $movie['backdrop_path'] ?? '',
-      ':release' => $movie['release_date'] ?? null,
+      ':release' => !empty($movie['release_date']) ? $movie['release_date'] : null,
       ':runtime' => $movie['runtime'] ?? null,
       ':avg' => $movie['vote_average'] ?? 0,
       ':count' => $movie['vote_count'] ?? 0,
