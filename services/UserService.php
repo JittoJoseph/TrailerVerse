@@ -256,7 +256,7 @@ class UserService
   public function getFollowers(int $userId, int $limit = 20): array
   {
     $limit = (int)$limit;
-    $sql = 'SELECT u.id, u.username, u.profile_picture
+    $sql = 'SELECT u.id, u.username
             FROM user_follows uf
             JOIN users u ON uf.follower_id = u.id
             WHERE uf.following_id = ?
@@ -273,7 +273,7 @@ class UserService
   public function getFollowing(int $userId, int $limit = 20): array
   {
     $limit = (int)$limit;
-    $sql = 'SELECT u.id, u.username, u.profile_picture
+    $sql = 'SELECT u.id, u.username
             FROM user_follows uf
             JOIN users u ON uf.following_id = u.id
             WHERE uf.follower_id = ?
@@ -285,7 +285,7 @@ class UserService
   }
 
   /**
-   * Get activity feed for a user (their own + people they follow)
+   * Get activity feed for a user (all public users with mixed ordering)
    */
   public function getFeed(int $userId, int $limit = 20, int $offset = 0): array
   {
@@ -306,7 +306,7 @@ class UserService
               ),
               ranked AS (
                 SELECT fr.user_id, fr.movie_id, fr.activity_type, fr.rating, fr.ts,
-                       u.username, u.profile_picture, mc.title AS movie_title, mc.poster_path,
+                       u.username, mc.title AS movie_title, mc.poster_path,
                        ROW_NUMBER() OVER (PARTITION BY fr.user_id, fr.movie_id
                                           ORDER BY CASE WHEN fr.activity_type = 'rated_movie' THEN 1 ELSE 0 END DESC, fr.ts DESC) rn
                 FROM feed_raw fr
@@ -314,16 +314,14 @@ class UserService
                 LEFT JOIN movie_cache mc ON mc.movie_id = fr.movie_id
                 WHERE u.is_public = TRUE
               )
-            SELECT user_id, username, profile_picture, activity_type, movie_id, movie_title, poster_path, rating, ts AS created_at
+            SELECT user_id, username, activity_type, movie_id, movie_title, poster_path, rating, ts AS created_at
             FROM ranked
             WHERE rn = 1
-              AND (user_id = :uid OR user_id IN (SELECT following_id FROM user_follows WHERE follower_id = :uid))
-            ORDER BY created_at DESC
+            ORDER BY DATE_ADD(created_at, INTERVAL FLOOR(RAND() * 86400) SECOND) DESC
             LIMIT :lim OFFSET :off";
 
     $stmt = $this->db->prepare($sql);
     // Bind values explicitly. MySQL requires integer bind for LIMIT/OFFSET.
-    $stmt->bindValue(':uid', $userId, PDO::PARAM_INT);
     $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
     $stmt->execute();
@@ -338,7 +336,7 @@ class UserService
     // Strategy: show public users excluding self. Prioritize people not yet followed,
     // but include already-followed users to keep the list filled when the network is small.
     $limit = (int)$limit;
-    $sql = 'SELECT u.id, u.username, u.profile_picture,
+    $sql = 'SELECT u.id, u.username,
                    CASE WHEN uf.follower_id IS NULL THEN 0 ELSE 1 END AS is_following,
                    CASE WHEN uf.follower_id IS NULL THEN 0 ELSE 1 END AS priority
             FROM users u
@@ -351,5 +349,54 @@ class UserService
     $stmt->bindValue(':uid', $userId, PDO::PARAM_INT);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  /**
+   * Update user profile information
+   *
+   * @param int $userId
+   * @param array $data
+   * @return bool
+   */
+  public function updateProfile(int $userId, array $data): bool
+  {
+    try {
+      $allowedFields = ['username', 'first_name', 'last_name', 'bio', 'is_public'];
+      $updateData = [];
+      $params = [];
+
+      foreach ($allowedFields as $field) {
+        if (isset($data[$field])) {
+          $updateData[] = "$field = ?";
+          $params[] = $data[$field];
+        }
+      }
+
+      if (empty($updateData)) {
+        return false;
+      }
+
+      $params[] = $userId;
+      $sql = "UPDATE users SET " . implode(', ', $updateData) . " WHERE id = ?";
+      
+      $stmt = $this->db->prepare($sql);
+      return $stmt->execute($params);
+    } catch (PDOException $e) {
+      return false;
+    }
+  }
+
+  /**
+   * Check if username is available (not taken by another user)
+   *
+   * @param string $username
+   * @param int $excludeUserId
+   * @return bool
+   */
+  public function isUsernameAvailable(string $username, int $excludeUserId = 0): bool
+  {
+    $stmt = $this->db->prepare('SELECT id FROM users WHERE username = ? AND id != ?');
+    $stmt->execute([$username, $excludeUserId]);
+    return !$stmt->fetch();
   }
 }
