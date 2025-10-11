@@ -53,6 +53,8 @@ CREATE TABLE movie_cache (
     director VARCHAR(100),
     cast_info JSON,
     trailer_key VARCHAR(50),
+    similar_movies JSON,
+    trending_order INT DEFAULT 0,
     cached_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -136,93 +138,6 @@ CREATE TABLE genres (
     name VARCHAR(50) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- 12. USER STATISTICS TABLE (DEPRECATED: superseded by user_stats_view)
-CREATE TABLE user_statistics (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    movies_watched INT DEFAULT 0,
-    movies_in_watchlist INT DEFAULT 0,
-    reviews_written INT DEFAULT 0,
-    ratings_given INT DEFAULT 0,
-    average_rating DECIMAL(3,2) DEFAULT 0.00,
-    favorite_genre_id INT,
-    total_watch_time_minutes INT DEFAULT 0,
-    achievement_points INT DEFAULT 0,
-    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (favorite_genre_id) REFERENCES genres(id) ON DELETE SET NULL,
-    UNIQUE KEY unique_user_stats (user_id)
-);
--- DEPRECATION: Drop table since it's no longer required (stats computed dynamically via view)
-DROP TABLE IF EXISTS user_statistics;
-
--- ============================================
--- VIEWS FOR COMMON QUERIES
--- ============================================
-
-CREATE VIEW user_feed_view AS
-SELECT
-    ua.id,
-    ua.user_id,
-    u.username,
-    u.profile_picture,
-    u.is_public,
-    ua.activity_type,
-    ua.movie_id,
-    mc.title as movie_title,
-    mc.poster_path,
-    ua.achievement_id,
-    a.name as achievement_name,
-    a.icon as achievement_icon,
-    ua.metadata,
-    ua.created_at
-FROM user_activities ua
-JOIN users u ON ua.user_id = u.id
-LEFT JOIN movie_cache mc ON ua.movie_id = mc.movie_id
-LEFT JOIN achievements a ON ua.achievement_id = a.id
-WHERE u.is_public = TRUE;
-
--- Dynamic user stats view: calculates counts and averages on the fly
-CREATE OR REPLACE VIEW user_stats_view AS
-SELECT
-    u.id AS user_id,
-    -- Movies watched count
-    COALESCE((SELECT COUNT(*) FROM movie_status ms WHERE ms.user_id = u.id AND ms.status = 'watched'), 0) AS movies_watched,
-    -- Watchlist count
-    COALESCE((SELECT COUNT(*) FROM movie_status ms2 WHERE ms2.user_id = u.id AND ms2.status = 'want_to_watch'), 0) AS movies_in_watchlist,
-    -- Reviews written
-    COALESCE((SELECT COUNT(*) FROM movie_reviews r WHERE r.user_id = u.id), 0) AS reviews_written,
-    -- Ratings given
-    COALESCE((SELECT COUNT(*) FROM movie_ratings rt WHERE rt.user_id = u.id), 0) AS ratings_given,
-    -- Average rating
-    COALESCE((SELECT ROUND(AVG(rating),2) FROM movie_ratings rt2 WHERE rt2.user_id = u.id), 0.00) AS average_rating,
-    -- Favorite genre with fallback system: prioritizes rated movies, falls back to watched movies
-    COALESCE(
-        -- Primary: Hybrid score for rated movies (requires only 1 rating)
-        (SELECT g2.name
-         FROM movie_ratings mr
-         JOIN movie_cache mc2 ON mr.movie_id = mc2.movie_id
-         JOIN genres g2 ON JSON_CONTAINS(mc2.genre_ids, JSON_ARRAY(CAST(g2.id AS UNSIGNED)))
-         WHERE mr.user_id = u.id
-         GROUP BY g2.id, g2.name
-         HAVING COUNT(*) >= 1
-         ORDER BY (AVG(mr.rating) * 0.7 + (COUNT(*) / 10.0) * 0.3) DESC
-         LIMIT 1),
-        -- Fallback: Most watched genre (for users who don't rate)
-        (SELECT g3.name
-         FROM movie_status ms
-         JOIN movie_cache mc3 ON ms.movie_id = mc3.movie_id
-         JOIN genres g3 ON JSON_CONTAINS(mc3.genre_ids, JSON_ARRAY(CAST(g3.id AS UNSIGNED)))
-         WHERE ms.user_id = u.id AND ms.status = 'watched'
-         GROUP BY g3.id, g3.name
-         ORDER BY COUNT(*) DESC
-         LIMIT 1)
-    ) AS favorite_genre_name,
-    -- Total achievement points
-    COALESCE((SELECT SUM(a.points) FROM user_achievements ua JOIN achievements a ON ua.achievement_id = a.id WHERE ua.user_id = u.id), 0) AS achievement_points
-FROM users u;
-
 -- ============================================
 -- INITIAL DATA INSERTS
 -- ============================================
@@ -249,23 +164,23 @@ INSERT INTO genres (id, name) VALUES
 (10752, 'War'),
 (37, 'Western');
 
--- Insert achievement templates
+-- Insert achievement templates with Tailwind icons
 INSERT INTO achievements (name, description, icon, achievement_type, criteria_value, points) VALUES
-('First Steps', 'Watch your first movie', 'first-movie.png', 'movies_watched', 1, 10),
-('Movie Buff', 'Watch 10 movies', 'movie-buff.png', 'movies_watched', 10, 25),
-('Cinephile', 'Watch 50 movies', 'cinephile.png', 'movies_watched', 50, 100),
-('Movie Master', 'Watch 100 movies', 'movie-master.png', 'movies_watched', 100, 200),
-('Review Rookie', 'Write your first review', 'first-review.png', 'reviews_written', 1, 15),
-('Critic', 'Write 10 reviews', 'critic.png', 'reviews_written', 10, 50),
-('Expert Reviewer', 'Write 25 reviews', 'expert-reviewer.png', 'reviews_written', 25, 100),
-('Rating Starter', 'Rate your first movie', 'first-rating.png', 'ratings_given', 1, 5),
-('Rating Expert', 'Rate 25 movies', 'rating-expert.png', 'ratings_given', 25, 50),
-('Taste Maker', 'Rate 100 movies', 'taste-maker.png', 'ratings_given', 100, 150),
-('Selective Viewer', 'Maintain high average rating (8.5+)', 'selective.png', 'high_ratings', 85, 75),
-('Quality Seeker', 'Maintain very high average rating (9.0+)', 'quality.png', 'high_ratings', 90, 150),
-('Genre Explorer', 'Watch movies from 5 different genres', 'explorer.png', 'genre_diversity', 5, 40),
-('Genre Master', 'Watch movies from 10 different genres', 'genre-master.png', 'genre_diversity', 10, 80),
-('Classic Connoisseur', 'Watch 10 movies from before 1990', 'classic.png', 'classic_movies', 10, 60),
-('Vintage Enthusiast', 'Watch 25 classic movies', 'vintage.png', 'classic_movies', 25, 120),
-('Trend Follower', 'Watch 10 movies from current year', 'trending.png', 'new_releases', 10, 30),
-('Early Adopter', 'Watch 25 new releases', 'early-adopter.png', 'new_releases', 25, 60);
+('First Steps', 'Watch your first movie', 'fas fa-play', 'movies_watched', 1, 10),
+('Movie Buff', 'Watch 10 movies', 'fas fa-film', 'movies_watched', 10, 25),
+('Cinephile', 'Watch 50 movies', 'fas fa-video', 'movies_watched', 50, 100),
+('Movie Master', 'Watch 100 movies', 'fas fa-crown', 'movies_watched', 100, 200),
+('Review Rookie', 'Write your first review', 'fas fa-comment', 'reviews_written', 1, 15),
+('Critic', 'Write 10 reviews', 'fas fa-pen-fancy', 'reviews_written', 10, 50),
+('Expert Reviewer', 'Write 25 reviews', 'fas fa-feather-alt', 'reviews_written', 25, 100),
+('Rating Starter', 'Rate your first movie', 'fas fa-star', 'ratings_given', 1, 5),
+('Rating Expert', 'Rate 25 movies', 'fas fa-star-half-alt', 'ratings_given', 25, 50),
+('Taste Maker', 'Rate 100 movies', 'fas fa-medal', 'ratings_given', 100, 150),
+('Selective Viewer', 'Maintain high average rating (8.5+)', 'fas fa-eye', 'high_ratings', 85, 75),
+('Quality Seeker', 'Maintain very high average rating (9.0+)', 'fas fa-gem', 'high_ratings', 90, 150),
+('Genre Explorer', 'Watch movies from 5 different genres', 'fas fa-compass', 'genre_diversity', 5, 40),
+('Genre Master', 'Watch movies from 10 different genres', 'fas fa-trophy', 'genre_diversity', 10, 80),
+('Classic Connoisseur', 'Watch 10 movies from before 1990', 'fas fa-history', 'classic_movies', 10, 60),
+('Vintage Enthusiast', 'Watch 25 classic movies', 'fas fa-hourglass-half', 'classic_movies', 25, 120),
+('Trend Follower', 'Watch 10 movies from current year', 'fas fa-fire', 'new_releases', 10, 30),
+('Early Adopter', 'Watch 25 new releases', 'fas fa-rocket', 'new_releases', 25, 60);
