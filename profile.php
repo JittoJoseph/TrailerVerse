@@ -136,7 +136,7 @@ $followingCount = $userService->getFollowingCount($profileUserId);
 
   <?php include './includes/header.php'; ?>
 
-  <div class="pt-0 md:pt-16">
+  <div class="pt-0 lg:pt-16">
     <!-- Profile Cover Section -->
     <div class="profile-cover h-[28rem] sm:h-72 lg:h-80 relative">
       <div class="absolute inset-0 z-10 flex items-end">

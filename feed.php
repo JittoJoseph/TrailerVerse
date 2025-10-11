@@ -112,7 +112,7 @@ function humanTime($timestamp)
 <body class="bg-slate-950 text-white min-h-screen">
   <?php include __DIR__ . '/includes/header.php'; ?>
 
-  <div class="pt-20 pb-8">
+  <div class="pt-8 lg:pt-24 pb-8">
     <div class="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8">
 
