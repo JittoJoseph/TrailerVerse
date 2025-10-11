@@ -49,128 +49,150 @@ if (isset($_SESSION['user_id'])) {
   <?php include 'includes/header_detail.php'; ?>
 
   <!-- Backdrop/Trailer Section -->
-  <section id="hero-section" class="relative h-screen w-full">
+  <section id="hero-section" class="relative min-h-screen w-full">
     <!-- Backdrop Image -->
     <div id="backdrop-container" class="absolute inset-0 transition-opacity duration-500">
-      <img src="<?= getTMDBBackdropUrl($movie['backdrop_path'] ?? '') ?>" alt="" class="absolute top-0 left-0 w-full h-full object-cover">
-      <div class="absolute inset-0 bg-black bg-opacity-50"></div>
-      <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black"></div>
+      <img src="<?= getTMDBBackdropUrl($movie['backdrop_path'] ?? '') ?>" alt="" class="absolute top-0 left-0 w-full h-full object-cover object-center md:object-top">
+      <div class="absolute inset-0 bg-black bg-opacity-40 md:bg-opacity-50"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black md:to-black/80"></div>
       
       <!-- Play Button (only show if trailer exists) -->
       <?php if (!empty($movie['trailer_key'])): ?>
       <div class="absolute inset-0 flex items-center justify-center z-20">
-        <button id="play-trailer-btn" class="flex items-center justify-center w-20 h-20 border-2 border-white/70 rounded-full hover:border-white hover:bg-white/10 transition hover:scale-110">
-          <i class="fas fa-play text-2xl text-white ml-0.5"></i>
+        <button id="play-trailer-btn" class="flex items-center justify-center w-16 h-16 md:w-20 md:h-20 border-2 border-white/80 rounded-full bg-black/20 backdrop-blur-sm hover:border-white hover:bg-white/10 transition-all hover:scale-110 shadow-lg">
+          <i class="fas fa-play text-white text-xl md:text-2xl ml-0.5"></i>
         </button>
       </div>
       <?php endif; ?>
       
       <!-- Movie Info Overlay -->
-      <div id="movie-info-overlay" class="absolute bottom-0 left-0 p-8 max-w-2xl space-y-4 z-20 transition-opacity duration-500">
-        <h1 class="text-6xl font-bold gradient-text"><?= htmlspecialchars($movie['title'] ?? '') ?></h1>
-        <p class="text-gray-300 max-w-lg leading-relaxed"><?= htmlspecialchars($movie['overview'] ?? '') ?></p>
-        <div class="mt-4 flex space-x-4">
+      <div id="movie-info-overlay" class="absolute bottom-0 left-0 right-0 p-4 md:p-8 max-w-none md:max-w-2xl space-y-2 md:space-y-4 z-20 transition-opacity duration-500">
+        <h1 class="text-3xl md:text-6xl font-bold gradient-text leading-tight"><?= htmlspecialchars($movie['title'] ?? '') ?></h1>
+        <p class="text-gray-200 md:text-gray-300 max-w-none md:max-w-lg leading-relaxed text-sm md:text-base line-clamp-3 md:line-clamp-none"><?= htmlspecialchars($movie['overview'] ?? '') ?></p>
+        <div class="mt-3 md:mt-4 flex flex-wrap gap-2 md:gap-4">
           <?php if (isset($_SESSION['user_id'])): ?>
-            <button id="btn-watchlist" class="flex items-center px-4 py-2 <?php echo $inWatchlist ? 'bg-red-600' : 'bg-white text-black'; ?> rounded-md hover:opacity-90 transition">
-              <i class="fas fa-list mr-2"></i><?= $inWatchlist ? 'Remove from List' : 'Add to Watchlist' ?>
+            <button id="btn-watchlist" class="flex items-center px-3 py-2 md:px-4 md:py-2 text-sm md:text-base <?php echo $inWatchlist ? 'bg-red-600' : 'bg-white text-black'; ?> rounded-md hover:opacity-90 transition">
+              <i class="fas fa-list mr-1 md:mr-2"></i><span class="hidden sm:inline"><?= $inWatchlist ? 'Remove from List' : 'Add to Watchlist' ?></span><span class="sm:hidden">List</span>
             </button>
-            <button id="btn-watched" class="flex items-center px-4 py-2 <?php echo $watched ? 'bg-green-600' : 'glass'; ?> rounded-md hover:opacity-90 transition">
-              <i class="fas fa-check mr-2"></i><?= $watched ? 'Unmark Watched' : 'Mark as Watched' ?>
+            <button id="btn-watched" class="flex items-center px-3 py-2 md:px-4 md:py-2 text-sm md:text-base <?php echo $watched ? 'bg-green-600' : 'glass'; ?> rounded-md hover:opacity-90 transition">
+              <i class="fas fa-check mr-1 md:mr-2"></i><span class="hidden sm:inline"><?= $watched ? 'Unmark Watched' : 'Mark as Watched' ?></span><span class="sm:hidden">Watched</span>
             </button>
           <?php else: ?>
-            <a href="auth/signin.php" class="px-4 py-2 bg-blue-500 rounded-md hover:opacity-90 transition">Sign in to manage list</a>
+            <a href="auth/signin.php" class="px-3 py-2 md:px-4 md:py-2 text-sm md:text-base bg-blue-500 rounded-md hover:opacity-90 transition">Sign in</a>
           <?php endif; ?>
         </div>
       </div>
       
-      <div class="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-black to-transparent"></div>
+      <div class="absolute bottom-0 left-0 w-full h-32 md:h-48 bg-gradient-to-t from-black to-transparent"></div>
     </div>
 
     <!-- YouTube Trailer Player (Hidden Initially) -->
-    <div id="trailer-container" class="absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500 flex items-center justify-center bg-black">
-      <div class="relative w-full max-w-7xl mx-auto" style="aspect-ratio: 16/9;">
+    <div id="trailer-container" class="absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500 flex items-center justify-center bg-black z-30">
+      <div class="relative w-full max-w-7xl mx-auto md:px-4" style="aspect-ratio: 16/9;">
         <iframe id="trailer-iframe" 
-                class="w-full h-full rounded-lg" 
+                class="w-full h-full rounded-lg md:rounded-lg shadow-2xl" 
                 frameborder="0" 
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowfullscreen>
         </iframe>
         <!-- Close Trailer Button -->
-        <button id="close-trailer-btn" class="absolute -top-12 right-0 z-30 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition">
-          <i class="fas fa-times text-white text-xl"></i>
+        <button id="close-trailer-btn" class="absolute -top-14 md:-top-12 right-4 md:right-0 z-30 w-10 h-10 md:w-12 md:h-12 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition backdrop-blur-sm">
+          <i class="fas fa-times text-white text-lg md:text-xl"></i>
         </button>
       </div>
     </div>
   </section>
 
   <!-- Movie Info Section (Shown when trailer is playing) -->
-  <div id="movie-info-section" class="hidden max-w-7xl mx-auto px-6 py-8">
-    <div class="glass rounded-2xl p-6">
-      <h2 class="text-4xl font-bold mb-4"><?= htmlspecialchars($movie['title'] ?? '') ?></h2>
-      <p class="text-gray-300 leading-relaxed mb-6"><?= htmlspecialchars($movie['overview'] ?? '') ?></p>
-      <div class="flex flex-wrap gap-4">
-        <?php if (isset($_SESSION['user_id'])): ?>
-          <button onclick="document.getElementById('btn-watchlist').click()" class="flex items-center px-4 py-2 <?php echo $inWatchlist ? 'bg-red-600' : 'bg-white text-black'; ?> rounded-md hover:opacity-90 transition">
-            <i class="fas fa-list mr-2"></i><?= $inWatchlist ? 'Remove from List' : 'Add to Watchlist' ?>
-          </button>
-          <button onclick="document.getElementById('btn-watched').click()" class="flex items-center px-4 py-2 <?php echo $watched ? 'bg-green-600' : 'glass'; ?> rounded-md hover:opacity-90 transition">
-            <i class="fas fa-check mr-2"></i><?= $watched ? 'Unmark Watched' : 'Mark as Watched' ?>
-          </button>
-        <?php else: ?>
-          <a href="auth/signin.php" class="px-4 py-2 bg-blue-500 rounded-md hover:opacity-90 transition">Sign in to manage list</a>
-        <?php endif; ?>
+  <div id="movie-info-section" class="hidden max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
+    <div class="glass rounded-2xl p-4 md:p-6">
+      <div class="flex flex-col md:flex-row md:items-start md:space-x-6 space-y-4 md:space-y-0">
+        <img src="<?= getTMDBPosterUrl($movie['poster_path'] ?? '') ?>" alt="<?= htmlspecialchars($movie['title']) ?>" class="w-32 md:w-48 rounded-lg shadow-lg mx-auto md:mx-0">
+        <div class="flex-1 text-center md:text-left">
+          <h2 class="text-2xl md:text-4xl font-bold mb-2 md:mb-4"><?= htmlspecialchars($movie['title'] ?? '') ?></h2>
+          <p class="text-gray-300 leading-relaxed mb-4 md:mb-6 text-sm md:text-base"><?= htmlspecialchars($movie['overview'] ?? '') ?></p>
+          <div class="flex flex-wrap justify-center md:justify-start gap-2 md:gap-4">
+            <?php if (isset($_SESSION['user_id'])): ?>
+              <button onclick="document.getElementById('btn-watchlist').click()" class="flex items-center px-3 py-2 md:px-4 md:py-2 text-sm md:text-base <?php echo $inWatchlist ? 'bg-red-600' : 'bg-white text-black'; ?> rounded-md hover:opacity-90 transition">
+                <i class="fas fa-list mr-1 md:mr-2"></i><span class="hidden sm:inline"><?= $inWatchlist ? 'Remove from List' : 'Add to Watchlist' ?></span><span class="sm:hidden">List</span>
+              </button>
+              <button onclick="document.getElementById('btn-watched').click()" class="flex items-center px-3 py-2 md:px-4 md:py-2 text-sm md:text-base <?php echo $watched ? 'bg-green-600' : 'glass'; ?> rounded-md hover:opacity-90 transition">
+                <i class="fas fa-check mr-1 md:mr-2"></i><span class="hidden sm:inline"><?= $watched ? 'Unmark Watched' : 'Mark as Watched' ?></span><span class="sm:hidden">Watched</span>
+              </button>
+            <?php else: ?>
+              <a href="auth/signin.php" class="px-3 py-2 md:px-4 md:py-2 text-sm md:text-base bg-blue-500 rounded-md hover:opacity-90 transition">Sign in to manage list</a>
+            <?php endif; ?>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Details Tabs -->
-  <div class="max-w-7xl mx-auto px-6 pt-8 lg:pt-24 pb-12">
-    <ul id="tabs" class="flex space-x-8 border-b border-gray-700">
-      <li><button data-tab="details" class="pb-2 text-lg text-white border-b-2 border-white hover:border-white">Details</button></li>
-      <li><button data-tab="reviews" class="pb-2 text-lg text-gray-400 border-b-2 border-transparent hover:text-white hover:border-white">Reviews</button></li>
+  <div class="max-w-7xl mx-auto px-4 md:px-6 pt-6 md:pt-8 lg:pt-24 pb-12">
+    <ul id="tabs" class="flex space-x-4 md:space-x-8 border-b border-gray-700 overflow-x-auto">
+      <li><button data-tab="details" class="pb-2 text-base md:text-lg text-white border-b-2 border-white hover:border-white whitespace-nowrap">Details</button></li>
+      <li><button data-tab="reviews" class="pb-2 text-base md:text-lg text-gray-400 border-b-2 border-transparent hover:text-white hover:border-white whitespace-nowrap">Reviews</button></li>
     </ul>
-    <div id="details" class="tab-content pt-8">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="space-y-4">
-          <div><span class="text-gray-400">Release Date:</span> <?= htmlspecialchars($movie['release_date'] ?? 'N/A') ?></div>
-          <div><span class="text-gray-400">Runtime:</span> <?= ($movie['runtime'] ?? 0) ?> min</div>
-          <div><span class="text-gray-400">Rating:</span> <?= number_format($movie['vote_average'], 1) ?> / 10</div>
-          <div><span class="text-gray-400">Genres:</span> <?= implode(', ', array_map(fn($g) => $g['name'], $movie['genres'] ?? [])) ?></div>
+    <div id="details" class="tab-content pt-6 md:pt-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        <div class="space-y-3 md:space-y-4">
+          <div class="flex flex-col sm:flex-row sm:justify-between">
+            <span class="text-gray-400 text-sm md:text-base">Release Date:</span>
+            <span class="text-white text-sm md:text-base"><?= htmlspecialchars($movie['release_date'] ?? 'N/A') ?></span>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:justify-between">
+            <span class="text-gray-400 text-sm md:text-base">Runtime:</span>
+            <span class="text-white text-sm md:text-base"><?= ($movie['runtime'] ?? 0) ?> min</span>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:justify-between">
+            <span class="text-gray-400 text-sm md:text-base">Rating:</span>
+            <span class="text-white text-sm md:text-base flex items-center">
+              <i class="fas fa-star text-yellow-400 mr-1"></i>
+              <?= number_format($movie['vote_average'], 1) ?> / 10
+            </span>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:justify-between">
+            <span class="text-gray-400 text-sm md:text-base">Genres:</span>
+            <span class="text-white text-sm md:text-base text-right sm:text-left"><?= implode(', ', array_map(fn($g) => $g['name'], $movie['genres'] ?? [])) ?></span>
+          </div>
         </div>
         <div>
-          <h2 class="text-2xl font-semibold mb-4">Overview</h2>
-          <p class="text-gray-300 leading-relaxed"><?= nl2br(htmlspecialchars($movie['overview'] ?? '')) ?></p>
+          <h2 class="text-xl md:text-2xl font-semibold mb-3 md:mb-4">Overview</h2>
+          <p class="text-gray-300 leading-relaxed text-sm md:text-base"><?= nl2br(htmlspecialchars($movie['overview'] ?? '')) ?></p>
         </div>
       </div> <!-- end details grid -->
       <!-- User rating section -->
-      <div id="user-rating" class="mt-6 flex items-center space-x-2">
-        <span class="text-white font-medium">Rate this movie:</span>
-        <?php if (isset($_SESSION['user_id'])): ?>
-          <?php for ($i = 1; $i <= 5; $i++): ?>
-            <i class="rating-star <?php echo ($i <= $userRating ? 'fas' : 'far'); ?> fa-star cursor-pointer text-yellow-400 text-2xl hover:text-yellow-300" data-value="<?= $i ?>"></i>
-          <?php endfor; ?>
-        <?php else: ?>
-          <a href="auth/signin.php" class="text-blue-400 hover:underline">Sign in to rate</a>
-        <?php endif; ?>
+      <div id="user-rating" class="mt-6 md:mt-8 flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+        <span class="text-white font-medium text-sm md:text-base">Rate this movie:</span>
+        <div class="flex space-x-1">
+          <?php if (isset($_SESSION['user_id'])): ?>
+            <?php for ($i = 1; $i <= 5; $i++): ?>
+              <i class="rating-star <?php echo ($i <= $userRating ? 'fas' : 'far'); ?> fa-star cursor-pointer text-yellow-400 text-lg md:text-2xl hover:text-yellow-300" data-value="<?= $i ?>"></i>
+            <?php endfor; ?>
+          <?php else: ?>
+            <a href="auth/signin.php" class="text-blue-400 hover:underline text-sm md:text-base">Sign in to rate</a>
+          <?php endif; ?>
+        </div>
       </div>
     </div>
-    <div id="reviews" class="tab-content hidden pt-8">
-      <div class="bg-gray-800 p-6 rounded-lg space-y-4">
+    <div id="reviews" class="tab-content hidden pt-6 md:pt-8">
+      <div class="bg-gray-800 p-4 md:p-6 rounded-lg space-y-4">
         <?php if (isset($_SESSION['user_id'])): ?>
-          <textarea id="review-textarea" rows="4" class="w-full p-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Share your thoughts..."></textarea>
-          <button id="btn-submit-review" class="px-6 py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-lg transition">Post Review</button>
+          <textarea id="review-textarea" rows="4" class="w-full p-3 md:p-4 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" placeholder="Share your thoughts..."></textarea>
+          <button id="btn-submit-review" class="px-4 py-2 md:px-6 md:py-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-lg transition text-sm md:text-base">Post Review</button>
         <?php else: ?>
-          <a href="auth/signin.php" class="inline-block text-blue-400 hover:underline">Sign in to write a review</a>
+          <a href="auth/signin.php" class="inline-block text-blue-400 hover:underline text-sm md:text-base">Sign in to write a review</a>
         <?php endif; ?>
       </div>
-      <div id="reviews-list" class="mt-6 space-y-6">
+      <div id="reviews-list" class="mt-6 space-y-4 md:space-y-6">
         <?php foreach ($reviews as $r): ?>
-          <div class="bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-inner">
-            <div class="flex items-center justify-between text-sm text-gray-400 mb-2">
+          <div class="bg-gray-900 p-4 md:p-6 rounded-lg border border-gray-700 shadow-inner">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs md:text-sm text-gray-400 mb-2 space-y-1 sm:space-y-0">
               <span>@<?= htmlspecialchars($r['username']) ?></span>
               <span><?= date('M j, Y H:i', strtotime($r['created_at'])) ?></span>
             </div>
-            <p class="text-gray-100 leading-relaxed whitespace-pre-wrap"><?= htmlspecialchars($r['review_text']) ?></p>
+            <p class="text-gray-100 leading-relaxed whitespace-pre-wrap text-sm md:text-base"><?= htmlspecialchars($r['review_text']) ?></p>
           </div>
         <?php endforeach; ?>
       </div>
@@ -179,31 +201,34 @@ if (isset($_SESSION['user_id'])) {
 
   <!-- Similar Movies Section -->
   <?php if (!empty($similarMoviesResults)): ?>
-  <section class="max-w-7xl mx-auto px-6 py-12">
-    <h2 class="text-2xl font-semibold mb-6">More Like This</h2>
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+  <section class="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
+    <h2 class="text-xl md:text-2xl font-semibold mb-4 md:mb-6">More Like This</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
       <?php foreach ($similarMoviesResults as $similar): ?>
         <a href="movie.php?id=<?= htmlspecialchars($similar['id']) ?>" class="group cursor-pointer">
-          <div class="relative rounded-lg overflow-hidden mb-3">
+          <div class="relative rounded-lg overflow-hidden mb-2 md:mb-3 aspect-[2/3]">
             <img src="<?= getTMDBPosterUrl($similar['poster_path'] ?? '') ?>"
               alt="<?= htmlspecialchars($similar['title']) ?>"
-              class="w-full h-64 object-cover transition-transform group-hover:scale-105">
+              class="w-full h-full object-cover transition-transform group-hover:scale-105">
 
             <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <button class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center glass">
-                <i class="fas fa-play text-white"></i>
+              <button class="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center glass">
+                <i class="fas fa-play text-white text-sm md:text-base"></i>
               </button>
             </div>
 
-            <div class="absolute top-2 right-2 glass px-2 py-1 rounded text-xs">
+            <div class="absolute top-1 md:top-2 right-1 md:right-2 glass px-1 md:px-2 py-0.5 md:py-1 rounded text-xs">
+              <i class="fas fa-star text-yellow-400 mr-0.5 md:mr-1"></i>
               <?= number_format($similar['vote_average'] ?? 0, 1) ?>
             </div>
           </div>
 
-          <h3 class="text-sm font-medium group-hover:text-gray-300 transition-colors">
-            <?= strlen($similar['title']) > 20 ? substr($similar['title'], 0, 20) . '...' : $similar['title'] ?>
+          <h3 class="text-xs md:text-sm font-medium group-hover:text-gray-300 transition-colors line-clamp-2 leading-tight">
+            <?= htmlspecialchars($similar['title']) ?>
           </h3>
-          <p class="text-xs text-gray-500"><?= date('Y', strtotime($similar['release_date'] ?? 'now')) ?></p>
+          <p class="text-xs text-gray-500 mt-0.5 md:mt-1">
+            <?= date('Y', strtotime($similar['release_date'] ?? 'now')) ?>
+          </p>
         </a>
       <?php endforeach; ?>
     </div>
@@ -369,13 +394,13 @@ if (isset($_SESSION['user_id'])) {
           list.innerHTML = '';
           data.reviews.forEach(r => {
             const div = document.createElement('div');
-            div.className = 'bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-inner';
+            div.className = 'bg-gray-900 p-4 md:p-6 rounded-lg border border-gray-700 shadow-inner';
             div.innerHTML = `
-            <div class="flex items-center justify-between text-sm text-gray-400 mb-2">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs md:text-sm text-gray-400 mb-2 space-y-1 sm:space-y-0">
               <span>@${r.username}</span>
               <span>${new Date(r.created_at).toLocaleString()}</span>
             </div>
-            <p class="text-gray-100 leading-relaxed whitespace-pre-wrap">${r.review_text.replace(/\n/g, '<br>')}</p>
+            <p class="text-gray-100 leading-relaxed whitespace-pre-wrap text-sm md:text-base">${r.review_text.replace(/\n/g, '<br>')}</p>
           `;
             list.appendChild(div);
           });
