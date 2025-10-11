@@ -23,6 +23,8 @@ $movieService = new MovieService();
 $movie = $movieService->getMovieDetails($id);
 $reviewService = new MovieReviewService($dbConn);
 $reviews = $reviewService->getReviews($id);
+$similarMovies = $movieService->getSimilarMovies($id);
+$similarMoviesResults = $similarMovies['results'] ?? [];
 
 $inWatchlist = false;
 $watched     = false;
@@ -46,25 +48,72 @@ if (isset($_SESSION['user_id'])) {
 <body class="bg-black text-white overflow-x-hidden overflow-y-auto">
   <?php include 'includes/header_detail.php'; ?>
 
-  <!-- Fullscreen Backdrop Section -->
-  <section class="relative h-screen w-full">
-    <img src="<?= getTMDBBackdropUrl($movie['backdrop_path'] ?? '') ?>" alt="" class="absolute top-0 left-0 w-full h-full object-cover">
-    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
-    <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black"></div>
-    <div class="absolute inset-0 flex items-center justify-center z-20">
-      <button class="flex items-center justify-center w-20 h-20 border-2 border-white/70 rounded-full hover:border-white hover:bg-white/10 transition">
-        <i class="fas fa-play text-2xl text-white ml-0.5"></i>
-      </button>
+  <!-- Backdrop/Trailer Section -->
+  <section id="hero-section" class="relative h-screen w-full">
+    <!-- Backdrop Image -->
+    <div id="backdrop-container" class="absolute inset-0 transition-opacity duration-500">
+      <img src="<?= getTMDBBackdropUrl($movie['backdrop_path'] ?? '') ?>" alt="" class="absolute top-0 left-0 w-full h-full object-cover">
+      <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black"></div>
+      
+      <!-- Play Button (only show if trailer exists) -->
+      <?php if (!empty($movie['trailer_key'])): ?>
+      <div class="absolute inset-0 flex items-center justify-center z-20">
+        <button id="play-trailer-btn" class="flex items-center justify-center w-20 h-20 border-2 border-white/70 rounded-full hover:border-white hover:bg-white/10 transition hover:scale-110">
+          <i class="fas fa-play text-2xl text-white ml-0.5"></i>
+        </button>
+      </div>
+      <?php endif; ?>
+      
+      <!-- Movie Info Overlay -->
+      <div id="movie-info-overlay" class="absolute bottom-0 left-0 p-8 max-w-2xl space-y-4 z-20 transition-opacity duration-500">
+        <h1 class="text-6xl font-bold gradient-text"><?= htmlspecialchars($movie['title'] ?? '') ?></h1>
+        <p class="text-gray-300 max-w-lg leading-relaxed"><?= htmlspecialchars($movie['overview'] ?? '') ?></p>
+        <div class="mt-4 flex space-x-4">
+          <?php if (isset($_SESSION['user_id'])): ?>
+            <button id="btn-watchlist" class="flex items-center px-4 py-2 <?php echo $inWatchlist ? 'bg-red-600' : 'bg-white text-black'; ?> rounded-md hover:opacity-90 transition">
+              <i class="fas fa-list mr-2"></i><?= $inWatchlist ? 'Remove from List' : 'Add to Watchlist' ?>
+            </button>
+            <button id="btn-watched" class="flex items-center px-4 py-2 <?php echo $watched ? 'bg-green-600' : 'glass'; ?> rounded-md hover:opacity-90 transition">
+              <i class="fas fa-check mr-2"></i><?= $watched ? 'Unmark Watched' : 'Mark as Watched' ?>
+            </button>
+          <?php else: ?>
+            <a href="auth/signin.php" class="px-4 py-2 bg-blue-500 rounded-md hover:opacity-90 transition">Sign in to manage list</a>
+          <?php endif; ?>
+        </div>
+      </div>
+      
+      <div class="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-black to-transparent"></div>
     </div>
-    <div class="absolute bottom-0 left-0 p-8 max-w-2xl space-y-4 z-20">
-      <h1 class="text-6xl font-bold gradient-text"><?= htmlspecialchars($movie['title'] ?? '') ?></h1>
-      <p class="text-gray-300 max-w-lg leading-relaxed"><?= htmlspecialchars($movie['overview'] ?? '') ?></p>
-      <div class="mt-4 flex space-x-4">
+
+    <!-- YouTube Trailer Player (Hidden Initially) -->
+    <div id="trailer-container" class="absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-500 flex items-center justify-center bg-black">
+      <div class="relative w-full max-w-7xl mx-auto" style="aspect-ratio: 16/9;">
+        <iframe id="trailer-iframe" 
+                class="w-full h-full rounded-lg" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+        </iframe>
+        <!-- Close Trailer Button -->
+        <button id="close-trailer-btn" class="absolute -top-12 right-0 z-30 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition">
+          <i class="fas fa-times text-white text-xl"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Movie Info Section (Shown when trailer is playing) -->
+  <div id="movie-info-section" class="hidden max-w-7xl mx-auto px-6 py-8">
+    <div class="glass rounded-2xl p-6">
+      <h2 class="text-4xl font-bold mb-4"><?= htmlspecialchars($movie['title'] ?? '') ?></h2>
+      <p class="text-gray-300 leading-relaxed mb-6"><?= htmlspecialchars($movie['overview'] ?? '') ?></p>
+      <div class="flex flex-wrap gap-4">
         <?php if (isset($_SESSION['user_id'])): ?>
-          <button id="btn-watchlist" class="flex items-center px-4 py-2 <?php echo $inWatchlist ? 'bg-red-600' : 'bg-white text-black'; ?> rounded-md hover:opacity-90 transition">
+          <button onclick="document.getElementById('btn-watchlist').click()" class="flex items-center px-4 py-2 <?php echo $inWatchlist ? 'bg-red-600' : 'bg-white text-black'; ?> rounded-md hover:opacity-90 transition">
             <i class="fas fa-list mr-2"></i><?= $inWatchlist ? 'Remove from List' : 'Add to Watchlist' ?>
           </button>
-          <button id="btn-watched" class="flex items-center px-4 py-2 <?php echo $watched ? 'bg-green-600' : 'glass'; ?> rounded-md hover:opacity-90 transition">
+          <button onclick="document.getElementById('btn-watched').click()" class="flex items-center px-4 py-2 <?php echo $watched ? 'bg-green-600' : 'glass'; ?> rounded-md hover:opacity-90 transition">
             <i class="fas fa-check mr-2"></i><?= $watched ? 'Unmark Watched' : 'Mark as Watched' ?>
           </button>
         <?php else: ?>
@@ -72,8 +121,7 @@ if (isset($_SESSION['user_id'])) {
         <?php endif; ?>
       </div>
     </div>
-    <div class="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-black to-transparent"></div>
-  </section>
+  </div>
 
   <!-- Details Tabs -->
   <div class="max-w-7xl mx-auto px-6 py-12">
@@ -129,9 +177,88 @@ if (isset($_SESSION['user_id'])) {
     </div>
   </div>
 
+  <!-- Similar Movies Section -->
+  <?php if (!empty($similarMoviesResults)): ?>
+  <section class="max-w-7xl mx-auto px-6 py-12">
+    <h2 class="text-2xl font-semibold mb-6">More Like This</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <?php foreach ($similarMoviesResults as $similar): ?>
+        <a href="movie.php?id=<?= htmlspecialchars($similar['id']) ?>" class="group cursor-pointer">
+          <div class="relative rounded-lg overflow-hidden mb-3">
+            <img src="<?= getTMDBPosterUrl($similar['poster_path'] ?? '') ?>"
+              alt="<?= htmlspecialchars($similar['title']) ?>"
+              class="w-full h-64 object-cover transition-transform group-hover:scale-105">
+
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <button class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center glass">
+                <i class="fas fa-play text-white"></i>
+              </button>
+            </div>
+
+            <div class="absolute top-2 right-2 glass px-2 py-1 rounded text-xs">
+              <?= number_format($similar['vote_average'] ?? 0, 1) ?>
+            </div>
+          </div>
+
+          <h3 class="text-sm font-medium group-hover:text-gray-300 transition-colors">
+            <?= strlen($similar['title']) > 20 ? substr($similar['title'], 0, 20) . '...' : $similar['title'] ?>
+          </h3>
+          <p class="text-xs text-gray-500"><?= date('Y', strtotime($similar['release_date'] ?? 'now')) ?></p>
+        </a>
+      <?php endforeach; ?>
+    </div>
+  </section>
+  <?php endif; ?>
+
   <?php include 'includes/footer.php'; ?>
 
   <script>
+    // Trailer functionality
+    const trailerKey = '<?= $movie['trailer_key'] ?? '' ?>';
+    const playBtn = document.getElementById('play-trailer-btn');
+    const closeBtn = document.getElementById('close-trailer-btn');
+    const backdropContainer = document.getElementById('backdrop-container');
+    const trailerContainer = document.getElementById('trailer-container');
+    const movieInfoOverlay = document.getElementById('movie-info-overlay');
+    const movieInfoSection = document.getElementById('movie-info-section');
+    const trailerIframe = document.getElementById('trailer-iframe');
+
+    if (playBtn && trailerKey) {
+      playBtn.addEventListener('click', () => {
+        // Set iframe source
+        trailerIframe.src = `https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`;
+        
+        // Fade out backdrop and info
+        backdropContainer.style.opacity = '0';
+        movieInfoOverlay.style.opacity = '0';
+        
+        setTimeout(() => {
+          backdropContainer.style.pointerEvents = 'none';
+          trailerContainer.style.opacity = '1';
+          trailerContainer.style.pointerEvents = 'auto';
+          movieInfoSection.classList.remove('hidden');
+        }, 500);
+      });
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        // Stop video
+        trailerIframe.src = '';
+        
+        // Fade out trailer
+        trailerContainer.style.opacity = '0';
+        trailerContainer.style.pointerEvents = 'none';
+        
+        setTimeout(() => {
+          backdropContainer.style.opacity = '1';
+          backdropContainer.style.pointerEvents = 'auto';
+          movieInfoOverlay.style.opacity = '1';
+          movieInfoSection.classList.add('hidden');
+        }, 500);
+      });
+    }
+
     // Tab switching
     const tabs = document.querySelectorAll('[data-tab]');
     tabs.forEach(btn => {

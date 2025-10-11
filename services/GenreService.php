@@ -19,12 +19,12 @@ class GenreService
    */
   public function getGenres()
   {
-    // Load cached genres
-    $stmt = $this->db->prepare('SELECT id, name FROM genres ORDER BY name');
+    // Always return cached genres first
+    $stmt = $this->db->prepare('SELECT id, name FROM genres WHERE id NOT IN (10749, 18, 14, 9648, 99, 10770, 36) ORDER BY name');
     $stmt->execute();
     $cached = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Always attempt to refresh cache from API
+    // Update cache in background with fresh API data
     $url = TMDB_BASE_URL . '/genre/movie/list?api_key=' . TMDB_API_KEY;
     $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
     if (!$response && function_exists('curl_version')) {
@@ -34,22 +34,20 @@ class GenreService
       $response = curl_exec($ch);
       curl_close($ch);
     }
-    $apiGenres = [];
     if ($response) {
       $data = json_decode($response, true);
       $apiGenres = $data['genres'] ?? [];
+      // Filter out blocked genres (Romance, Drama, Fantasy, Mystery, genre 99, TV Movie, History)
       $apiGenres = array_filter($apiGenres, function ($g) {
-        return !in_array($g['id'], [10749, 18, 14, 9648]);
+        return !in_array($g['id'], [10749, 18, 14, 9648, 99, 10770, 36]);
       });
       if (!empty($apiGenres)) {
         $this->cacheGenres($apiGenres);
       }
     }
-    // Return cache if available, else API data
-    if (!empty($cached)) {
-      return $cached;
-    }
-    return $apiGenres;
+
+    // Always return cached genres for immediate display
+    return $cached;
   }
 
   /**
@@ -59,6 +57,11 @@ class GenreService
    */
   private function cacheGenres(array $genres)
   {
+    // Filter out blocked genres before caching
+    $genres = array_filter($genres, function ($g) {
+      return !in_array($g['id'], [10749, 18, 14, 9648, 99, 10770, 36]);
+    });
+
     $sql = 'INSERT INTO genres (id, name) VALUES (:id, :name)
             ON DUPLICATE KEY UPDATE name = VALUES(name)';
     $stmt = $this->db->prepare($sql);
