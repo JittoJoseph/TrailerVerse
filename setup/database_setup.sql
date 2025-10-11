@@ -9,7 +9,6 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     first_name VARCHAR(15),
     last_name VARCHAR(20),
-    profile_picture VARCHAR(255),
     is_public BOOLEAN DEFAULT TRUE,
     bio TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
