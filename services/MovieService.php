@@ -399,8 +399,8 @@ class MovieService
 
   public function discoverMovies($filters = [])
   {
-    // Try to return cached movies that might match the filters
-    $query = "SELECT * FROM movie_cache WHERE trending_order >= 999"; // Get general cached movies
+    // Query cached movies with filters applied, ordered by rank (trending_order) first, then quality
+    $query = "SELECT * FROM movie_cache WHERE movie_id != 7451";
     $params = [];
 
     if (!empty($filters['genre'])) {
@@ -418,57 +418,73 @@ class MovieService
       $params[] = $filters['min_rating'];
     }
 
-    $query .= " ORDER BY vote_average DESC, vote_count DESC LIMIT 20";
+    $query .= " ORDER BY trending_order ASC, vote_average DESC, vote_count DESC LIMIT 20";
 
     $stmt = $this->db->prepare($query);
     $stmt->execute($params);
     $cached = $stmt->fetchAll();
     $cachedResults = $this->formatMovies($cached)['results'];
 
-    // If no cached results match, return trending movies
+    // If no cached results match, fetch from API and cache
     if (empty($cachedResults)) {
-      $cachedResults = $this->getCachedMovies()['results'];
-    }
+      $apiParams = [
+        'api_key' => TMDB_API_KEY,
+        'sort_by' => $filters['sort_by'] ?? 'popularity.desc',
+        'include_adult' => 'false',
+        'page' => $filters['page'] ?? 1
+      ];
 
-    // Update cache in background with fresh API data
-    $params = [
-      'api_key' => TMDB_API_KEY,
-      'sort_by' => $filters['sort_by'] ?? 'popularity.desc',
-      'include_adult' => 'false',
-      'page' => $filters['page'] ?? 1
-    ];
+      if (!empty($filters['genre'])) {
+        $apiParams['with_genres'] = $filters['genre'];
+      }
+      if (!empty($filters['year'])) {
+        $apiParams['primary_release_year'] = $filters['year'];
+      }
+      if (!empty($filters['min_rating'])) {
+        $apiParams['vote_average.gte'] = $filters['min_rating'];
+      }
 
-    if (!empty($filters['genre'])) {
-      $params['with_genres'] = $filters['genre'];
-    }
-    if (!empty($filters['year'])) {
-      $params['primary_release_year'] = $filters['year'];
-    }
-    if (!empty($filters['min_rating'])) {
-      $params['vote_average.gte'] = $filters['min_rating'];
-    }
+      $queryString = http_build_query($apiParams);
+      $url = TMDB_BASE_URL . "/discover/movie?" . $queryString;
 
-    $queryString = http_build_query($params);
-    $url = TMDB_BASE_URL . "/discover/movie?" . $queryString;
+      $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
+      if (!$response && function_exists('curl_version')) {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+        $response = curl_exec($ch);
+        curl_close($ch);
+      }
 
-    $response = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => 3]]));
-    if (!$response && function_exists('curl_version')) {
-      $ch = curl_init($url);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-      curl_setopt($ch, CURLOPT_TIMEOUT, 3);
-      $response = curl_exec($ch);
-      curl_close($ch);
-    }
-
-    if ($response) {
-      $data = json_decode($response, true);
-      if (!empty($data['results'])) {
-        // Cache discovered movies without affecting trending order
-        $this->updateMovieCacheGeneral($data['results']);
+      if ($response) {
+        $data = json_decode($response, true);
+        if (!empty($data['results'])) {
+          // Cache discovered movies
+          $this->updateMovieCacheGeneral($data['results']);
+          // Format and return fresh results
+          $filtered = array_filter($data['results'], fn($m) => !($m['adult'] ?? false) && $m['id'] != 7451);
+          $formatted = array_map(function ($movie) {
+            return [
+              'id' => $movie['id'],
+              'title' => $movie['title'],
+              'overview' => $movie['overview'],
+              'poster_path' => $movie['poster_path'],
+              'backdrop_path' => $movie['backdrop_path'],
+              'release_date' => $movie['release_date'],
+              'vote_average' => $movie['vote_average'],
+              'vote_count' => $movie['vote_count']
+            ];
+          }, array_slice($filtered, 0, 20));
+          return [
+            'results' => $formatted,
+            'total_pages' => $data['total_pages'] ?? 1,
+            'page' => $data['page'] ?? 1
+          ];
+        }
       }
     }
 
-    // Always return cached results for immediate display
+    // Return cached results
     return ['results' => $cachedResults, 'total_pages' => 1, 'page' => 1];
   }
 }

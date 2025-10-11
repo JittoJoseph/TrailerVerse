@@ -77,13 +77,13 @@ $years = range($currentYear, 1950);
                  name="search" 
                  value="<?= htmlspecialchars($searchQuery) ?>"
                  placeholder="Movie title..." 
-                 class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50">
+                 class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50">
         </div>
 
         <!-- Genre Filter -->
         <div>
           <label class="block text-sm text-gray-400 mb-2">Genre</label>
-          <select name="genre" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50">
+          <select name="genre" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50">
             <option value="">All Genres</option>
             <?php foreach ($genres as $genre): ?>
               <option value="<?= $genre['id'] ?>" <?= $selectedGenre == $genre['id'] ? 'selected' : '' ?>>
@@ -96,7 +96,7 @@ $years = range($currentYear, 1950);
         <!-- Year Filter -->
         <div>
           <label class="block text-sm text-gray-400 mb-2">Year</label>
-          <select name="year" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50">
+          <select name="year" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50">
             <option value="">All Years</option>
             <?php foreach ($years as $year): ?>
               <option value="<?= $year ?>" <?= $selectedYear == $year ? 'selected' : '' ?>>
@@ -109,7 +109,7 @@ $years = range($currentYear, 1950);
         <!-- Rating Filter -->
         <div>
           <label class="block text-sm text-gray-400 mb-2">Min Rating</label>
-          <select name="rating" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50">
+          <select name="rating" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50">
             <option value="">Any Rating</option>
             <option value="7" <?= $minRating == '7' ? 'selected' : '' ?>>7+ ⭐</option>
             <option value="8" <?= $minRating == '8' ? 'selected' : '' ?>>8+ ⭐⭐</option>
@@ -120,7 +120,7 @@ $years = range($currentYear, 1950);
         <!-- Sort By -->
         <div>
           <label class="block text-sm text-gray-400 mb-2">Sort By</label>
-          <select name="sort" class="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50">
+          <select name="sort" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50">
             <option value="popularity.desc" <?= $selectedSort == 'popularity.desc' ? 'selected' : '' ?>>Popularity</option>
             <option value="vote_average.desc" <?= $selectedSort == 'vote_average.desc' ? 'selected' : '' ?>>Rating</option>
             <option value="release_date.desc" <?= $selectedSort == 'release_date.desc' ? 'selected' : '' ?>>Release Date</option>
