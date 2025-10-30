@@ -1,10 +1,10 @@
 <?php
 class Database
 {
-  private $host = 'localhost';
-  private $username = 'root';
-  private $password = '';
-  private $database = 'trailerverse';
+  private $host = 'sql213.infinityfree.com';
+  private $username = 'if0_39514690';
+  private $password = 'PmqA9QpKkpFiUr';
+  private $database = 'if0_39514690_trailerverse';
   private $connection;
 
   public function connect()
