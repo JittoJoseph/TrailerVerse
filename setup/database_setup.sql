@@ -15,17 +15,7 @@ CREATE TABLE users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- 2. USER SESSIONS TABLE
-CREATE TABLE user_sessions (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    session_token VARCHAR(255) NOT NULL UNIQUE,
-    expires_at TIMESTAMP NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- 3. USER FOLLOWS TABLE
+-- 2. USER FOLLOWS TABLE
 CREATE TABLE user_follows (
     id INT PRIMARY KEY AUTO_INCREMENT,
     follower_id INT NOT NULL,
@@ -37,7 +27,7 @@ CREATE TABLE user_follows (
     CONSTRAINT chk_no_self_follow CHECK (follower_id != following_id)
 );
 
--- 4. MOVIE CACHE TABLE
+-- 3. MOVIE CACHE TABLE
 CREATE TABLE movie_cache (
     movie_id INT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -57,7 +47,7 @@ CREATE TABLE movie_cache (
     cached_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 5. MOVIE STATUS TABLE
+-- 4. MOVIE STATUS TABLE
 CREATE TABLE movie_status (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
@@ -69,7 +59,7 @@ CREATE TABLE movie_status (
     UNIQUE KEY unique_user_movie (user_id, movie_id)
 );
 
--- 6. MOVIE RATINGS TABLE
+-- 5. MOVIE RATINGS TABLE
 CREATE TABLE movie_ratings (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
@@ -82,7 +72,7 @@ CREATE TABLE movie_ratings (
     CONSTRAINT chk_rating_range CHECK (rating >= 1.0 AND rating <= 10.0)
 );
 
--- 7. MOVIE REVIEWS TABLE
+-- 6. MOVIE REVIEWS TABLE
 CREATE TABLE movie_reviews (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
@@ -94,7 +84,7 @@ CREATE TABLE movie_reviews (
     UNIQUE KEY unique_user_movie_review (user_id, movie_id)
 );
 
--- 8. ACHIEVEMENTS TABLE
+-- 7. ACHIEVEMENTS TABLE
 CREATE TABLE achievements (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL UNIQUE,
@@ -107,7 +97,7 @@ CREATE TABLE achievements (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 9. USER ACHIEVEMENTS TABLE
+-- 8. USER ACHIEVEMENTS TABLE
 CREATE TABLE user_achievements (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
@@ -118,7 +108,7 @@ CREATE TABLE user_achievements (
     UNIQUE KEY unique_user_achievement (user_id, achievement_id)
 );
 
--- 10. USER ACTIVITIES TABLE
+-- 9. USER ACTIVITIES TABLE
 CREATE TABLE user_activities (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
@@ -131,7 +121,7 @@ CREATE TABLE user_activities (
     FOREIGN KEY (achievement_id) REFERENCES achievements(id) ON DELETE SET NULL
 );
 
--- 11. GENRE MASTER TABLE
+-- 10. GENRE MASTER TABLE
 CREATE TABLE genres (
     id INT PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE,
