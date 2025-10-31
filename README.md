@@ -1,195 +1,114 @@
-# 🎬 TrailerVerse
+# TrailerVerse
 
-A modern, social movie discovery platform built with PHP, MySQL, and TMDB API. Discover trending movies, build your watchlist, connect with fellow movie enthusiasts, and track your cinematic achievements.
+A complete, modern movie discovery platform built with PHP, MySQL, and TMDB API. Discover trending movies, build watchlists, connect with fellow movie enthusiasts, and track cinematic achievements.
 
-![TrailerVerse](https://img.shields.io/badge/Status-Active-brightgreen) ![PHP](https://img.shields.io/badge/PHP-8.0+-blue) ![MySQL](https://img.shields.io/badge/MySQL-8.0+-orange) ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.x-38B2AC)
+![Status](https://img.shields.io/badge/Status-Complete-brightgreen) ![PHP](https://img.shields.io/badge/PHP-8.0+-blue) ![MySQL](https://img.shields.io/badge/MySQL-8.0+-orange) ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.x-38B2AC)
 
-## ✨ Features
+## Live Demo
 
-### 🎯 Core Features
+**[View TrailerVerse Live](https://trailerverse.infinityfreeapp.com/?i=1)**
 
-- **Movie Discovery**: Browse trending movies, search by title, filter by genre, year, and rating
+## Features
+
+- **Movie Discovery**: Browse trending movies, search, and filter by genre/year/rating
 - **User Authentication**: Secure signup/signin with session management
-- **Personal Profiles**: Customizable user profiles with bio, profile pictures, and privacy settings
-- **Watchlist Management**: Add/remove movies to your personal watchlist
-- **Movie Reviews**: Rate and review movies you've watched
-- **Social Feed**: Follow other users and see their activity in your personalized feed
+- **Watchlist & Reviews**: Personal watchlists, ratings, and movie reviews
+- **Social Features**: Follow users, activity feeds, and community interaction
+- **Achievement System**: Gamified progress tracking with badges and points
+- **Modern UI**: Glassmorphism design with responsive dark theme
 
-### 🏆 Achievement System
-
-- **Gamification**: Unlock achievements for watching movies, leaving reviews, and social interactions
-- **Progress Tracking**: Visual progress bars and achievement badges
-- **Community Stats**: View community-wide statistics and leaderboards
-
-### 🎨 Modern UI/UX
-
-- **Glassmorphism Design**: Beautiful glass-like UI elements with backdrop blur effects
-- **Responsive Design**: Fully responsive across desktop, tablet, and mobile devices
-- **Dark Theme**: Sleek dark theme optimized for movie browsing
-- **Smooth Animations**: CSS transitions and hover effects for enhanced interactivity
-
-### 🔧 Technical Features
-
-- **TMDB Integration**: Real-time movie data from The Movie Database API
-- **Database Caching**: Intelligent caching system for improved performance
-- **RESTful Architecture**: Clean, maintainable PHP codebase
-- **Security**: Input validation, prepared statements, and secure session handling
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
-- **XAMPP/WAMP** or similar PHP development environment
-- **PHP 8.0+** with MySQL extension
-- **MySQL 8.0+**
-- **Composer** (optional, for dependency management)
+- XAMPP/WAMP or PHP 8.0+ with MySQL extension
+- MySQL 8.0+
 
 ### Installation
 
-1. **Clone the Repository**
+1. **Clone & Setup**
 
    ```bash
-   git clone https://github.com/yourusername/TrailerVerse.git
+   git clone https://github.com/JittoJoseph/TrailerVerse.git
    cd TrailerVerse
    ```
 
 2. **Database Setup**
 
    ```bash
-   # Copy database configuration
+   # Copy config and edit database credentials
    cp config/database.php.example config/database.php
 
-   # Import database schema
+   # Import schema
    mysql -u root -p < setup/database_setup.sql
 
-   # Populate with sample data (optional)
+   # Populate sample movie data
    php setup/populate_cache.php
    ```
 
-3. **Configure Environment**
+3. **Configure API**
 
-   - Update `config/database.php` with your MySQL credentials
-   - Ensure TMDB API key is configured in `config/tmdb_config.php`
-   - Set correct `APP_URL` in `config/app.php`
+   - Add your TMDB API key to `config/tmdb_config.php`
+   - Update `APP_URL` in `config/app.php` if needed
 
-4. **Start Development Server**
+4. **Run**
 
    ```bash
-   # Using XAMPP: Place in htdocs and start Apache/MySQL
+   # Using XAMPP: Place in htdocs, start Apache/MySQL
    # Or use PHP built-in server
    php -S localhost:8000
    ```
 
-5. **Access Application**
-   ```
-   http://localhost/TrailerVerse
-   ```
+   Visit: `http://localhost/TrailerVerse` (or `http://localhost:8000`)
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 TrailerVerse/
-├── 📁 api/                 # API endpoints (future expansion)
-├── 📁 assets/              # Static assets (CSS, JS, images)
-├── 📁 auth/                # Authentication pages
-│   ├── signin.php         # User login
-│   ├── signup.php         # User registration
-│   └── logout.php         # Session termination
-├── 📁 config/              # Configuration files
-│   ├── app.php            # Application settings
-│   ├── database.php       # Database connection
-│   └── tmdb_config.php    # TMDB API configuration
-├── 📁 includes/            # Reusable components
-│   ├── head.php           # HTML head section
-│   ├── header.php         # Navigation header
-│   └── footer.php         # Site footer
-├── 📁 services/            # Business logic layer
-│   ├── MovieService.php   # Movie data management
-│   ├── UserService.php    # User management
-│   ├── GenreService.php   # Genre handling
-│   ├── MovieReviewService.php # Review system
-│   ├── MovieStatusService.php # Watch status tracking
-│   └── AchievementService.php # Achievement system
-├── 📁 setup/               # Database setup files
-│   ├── database_setup.sql # Database schema
-│   └── populate_cache.php # Sample data population
-├── 📄 index.php            # Homepage/Discover page
-├── 📄 explore.php          # Movie exploration with filters
-├── 📄 genres.php           # Genre browsing
-├── 📄 movie.php            # Individual movie details
-├── 📄 profile.php          # User profiles
-├── 📄 feed.php             # Social activity feed
-├── 📄 social.php           # Social interaction API
-└── 📄 README.md            # Project documentation
+├── auth/                 # Authentication (signin.php, signup.php, logout.php)
+├── config/               # Configuration (app.php, database.php, tmdb_config.php)
+├── includes/             # Reusable components (head.php, header.php, footer.php)
+├── services/             # Business logic layer
+│   ├── MovieService.php
+│   ├── UserService.php
+│   ├── GenreService.php
+│   ├── MovieReviewService.php
+│   ├── MovieStatusService.php
+│   └── AchievementService.php
+├── setup/                # Database setup (database_setup.sql, populate_cache.php)
+├── index.php             # Homepage/Discover
+├── explore.php           # Movie search & filters
+├── movie.php             # Movie details
+├── profile.php           # User profiles
+├── feed.php              # Social activity feed
+└── genres.php            # Genre browsing
 ```
 
-## 🛠️ Technology Stack
+## Tech Stack
 
-### Backend
+**Backend**: PHP 8.0+ • MySQL 8.0+ • PDO  
+**Frontend**: HTML5 • Tailwind CSS • JavaScript • Font Awesome  
+**APIs**: TMDB API
 
-- **PHP 8.0+**: Server-side scripting and business logic
-- **MySQL 8.0+**: Relational database for data persistence
-- **PDO**: Secure database abstraction layer
+## Security
 
-### Frontend
+- Input validation & sanitization
+- Prepared statements (PDO)
+- Password hashing (bcrypt)
+- XSS protection
+- Session security
 
-- **HTML5**: Semantic markup structure
-- **Tailwind CSS**: Utility-first CSS framework
-- **JavaScript (ES6+)**: Interactive functionality
-- **Font Awesome**: Icon library
+## Database Schema
 
-### APIs & Services
+Normalized 3NF design with tables for users, movies, reviews, achievements, and social features. Uses JSON columns for flexible genre storage and intelligent caching for TMDB data.
 
-- **TMDB API**: Movie database and metadata
-- **Session Management**: PHP native sessions
-- **File Upload**: Profile picture handling
+## Key Components
 
-### Development Tools
+- **Movie Discovery**: TMDB integration with smart caching
+- **Social System**: User following, activity feeds, reviews
+- **Achievement Engine**: Progress tracking and gamification
+- **Responsive UI**: Mobile-first design with glassmorphism effects
 
-- **XAMPP**: Local development environment
-- **Git**: Version control
-- **Composer**: PHP dependency management
+---
 
-## 🎯 Key Components
-
-### Movie Discovery System
-
-- **Trending Movies**: Real-time trending data from TMDB
-- **Advanced Search**: Multi-criteria movie search and filtering
-- **Genre Browsing**: Organized movie discovery by categories
-- **Movie Details**: Comprehensive movie information pages
-
-### Social Features
-
-- **User Profiles**: Personalized user pages with stats and activity
-- **Following System**: Connect with other movie enthusiasts
-- **Activity Feed**: Chronological activity stream of followed users
-- **Review System**: User-generated movie reviews and ratings
-
-### Achievement System
-
-- **Progress Tracking**: Visual achievement progress indicators
-- **Badge System**: Unlockable achievement badges
-- **Gamification**: Points and rewards for engagement
-
-## 🔒 Security Features
-
-- **Input Validation**: Comprehensive server-side validation
-- **SQL Injection Prevention**: Prepared statements and parameterized queries
-- **XSS Protection**: Output sanitization and escaping
-- **Session Security**: Secure session handling and timeout management
-- **Password Hashing**: bcrypt password encryption
-- **CSRF Protection**: Token-based request validation
-
-## 📊 Database Schema
-
-The application uses a normalized 3NF database design with the following key tables:
-
-- `users` - User accounts and profiles
-- `user_sessions` - Session management
-- `user_follows` - Social following relationships
-- `movie_cache` - Cached movie data from TMDB
-- `movie_reviews` - User movie reviews and ratings
-- `movie_status` - Watch status tracking (watchlist, watched, etc.)
-- `achievements` - Achievement definitions
-- `user_achievements` - User achievement unlocks
+**Ready to explore movies?** Clone the repo and start your cinematic journey!
