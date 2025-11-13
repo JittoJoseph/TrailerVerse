@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 350" width="800" height="350">
+  <!-- White background -->
+  <rect width="800" height="350" fill="white" stroke="black" stroke-width="2"/>
+  
+  <!-- Header Row -->
+  <line x1="50" y1="20" x2="750" y2="20" stroke="black" stroke-width="2"/>
+  <line x1="50" y1="20" x2="50" y2="350" stroke="black" stroke-width="2"/>
+  <line x1="400" y1="20" x2="400" y2="350" stroke="black" stroke-width="2"/>
+  <line x1="750" y1="20" x2="750" y2="350" stroke="black" stroke-width="2"/>
+  
+  <!-- Column Headers -->
+  <text x="225" y="45" font-size="16" font-weight="bold" text-anchor="middle" fill="black">
+    Component
+  </text>
+  <text x="575" y="45" font-size="16" font-weight="bold" text-anchor="middle" fill="black">
+    Symbol
+  </text>
+  
+  <!-- Divider line under headers -->
+  <line x1="50" y1="60" x2="750" y2="60" stroke="black" stroke-width="1"/>
+  
+  <!-- Row 1: Process -->
+  <line x1="50" y1="60" x2="50" y2="120" stroke="black" stroke-width="1"/>
+  <line x1="400" y1="60" x2="400" y2="120" stroke="black" stroke-width="1"/>
+  <line x1="750" y1="60" x2="750" y2="120" stroke="black" stroke-width="1"/>
+  <line x1="50" y1="120" x2="750" y2="120" stroke="black" stroke-width="1"/>
+  
+  <text x="225" y="95" font-size="14" text-anchor="middle" fill="black">
+    Process
+  </text>
+  <!-- Rectangle symbol -->
+  <rect x="500" y="75" width="150" height="35" fill="none" stroke="black" stroke-width="2"/>
+  
+  <!-- Row 2: Input-Output -->
+  <line x1="50" y1="120" x2="50" y2="180" stroke="black" stroke-width="1"/>
+  <line x1="400" y1="120" x2="400" y2="180" stroke="black" stroke-width="1"/>
+  <line x1="750" y1="120" x2="750" y2="180" stroke="black" stroke-width="1"/>
+  <line x1="50" y1="180" x2="750" y2="180" stroke="black" stroke-width="1"/>
+  
+  <text x="225" y="155" font-size="14" text-anchor="middle" fill="black">
+    Input-Output
+  </text>
+  <!-- Parallelogram symbol -->
+  <polygon points="510,175 545,175 590,135 555,135" fill="none" stroke="black" stroke-width="2"/>
+  
+  <!-- Row 3: Connector -->
+  <line x1="50" y1="180" x2="50" y2="240" stroke="black" stroke-width="1"/>
+  <line x1="400" y1="180" x2="400" y2="240" stroke="black" stroke-width="1"/>
+  <line x1="750" y1="180" x2="750" y2="240" stroke="black" stroke-width="1"/>
+  <line x1="50" y1="240" x2="750" y2="240" stroke="black" stroke-width="1"/>
+  
+  <text x="225" y="215" font-size="14" text-anchor="middle" fill="black">
+    Connector
+  </text>
+  <!-- Circle/Oval symbol -->
+  <circle cx="575" cy="210" r="20" fill="none" stroke="black" stroke-width="2"/>
+  
+  <!-- Row 4: Decision/Condition -->
+  <line x1="50" y1="240" x2="50" y2="300" stroke="black" stroke-width="1"/>
+  <line x1="400" y1="240" x2="400" y2="300" stroke="black" stroke-width="1"/>
+  <line x1="750" y1="240" x2="750" y2="300" stroke="black" stroke-width="1"/>
+  <line x1="50" y1="300" x2="750" y2="300" stroke="black" stroke-width="1"/>
+  
+  <text x="225" y="275" font-size="14" text-anchor="middle" fill="black">
+    Decision/Condition
+  </text>
+  <!-- Diamond/Rhombus symbol -->
+  <polygon points="575,245 605,270 575,295 545,270" fill="none" stroke="black" stroke-width="2"/>
+  
+  <!-- Row 5: Data Flow -->
+  <line x1="50" y1="300" x2="50" y2="350" stroke="black" stroke-width="1"/>
+  <line x1="400" y1="300" x2="400" y2="350" stroke="black" stroke-width="1"/>
+  <line x1="750" y1="300" x2="750" y2="350" stroke="black" stroke-width="1"/>
+  <line x1="50" y1="350" x2="750" y2="350" stroke="black" stroke-width="2"/>
+  
+  <text x="225" y="330" font-size="14" text-anchor="middle" fill="black">
+    Data Flow
+  </text>
+  <!-- Arrow symbol -->
+  <line x1="510" y1="325" x2="640" y2="325" stroke="black" stroke-width="2"/>
+  <polygon points="640,325 630,320 630,330" fill="black" stroke="black" stroke-width="2"/>
+</svg>
