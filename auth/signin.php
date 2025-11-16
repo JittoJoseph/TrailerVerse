@@ -3,35 +3,27 @@ require_once '../config/app.php';
 require_once '../config/database.php';
 
 $error = '';
-$success = '';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-  $username = trim($_POST['username'] ?? '');
-  $password = trim($_POST['password'] ?? '');
+if ($_POST) {
+  $username = trim($_POST['username']);
+  $password = trim($_POST['password']);
 
-  if (empty($username) || empty($password)) {
+  if (!$username || !$password) {
     $error = 'Please fill in all fields';
   } else {
-    try {
-      $db = new Database();
-      $conn = $db->connect();
+    $db = new Database();
+    $conn = $db->connect();
+    $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE username = ?");
+    $stmt->execute([$username]);
+    $user = $stmt->fetch();
 
-      // Check if user exists
-      $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE username = ?");
-      $stmt->execute([$username]);
-      $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-      if ($user && password_verify($password, $user['password'])) {
-        // Login successful
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
-        header('Location: ../index.php');
-        exit();
-      } else {
-        $error = 'Invalid username or password';
-      }
-    } catch (PDOException $e) {
-      $error = 'Connection failed. Please try again.';
+    if ($user && password_verify($password, $user['password'])) {
+      $_SESSION['user_id'] = $user['id'];
+      $_SESSION['username'] = $user['username'];
+      header('Location: ../index.php');
+      exit;
+    } else {
+      $error = 'Invalid username or password';
     }
   }
 }
@@ -86,14 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <?php if ($error): ?>
       <div class="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg mb-6">
         <i class="fas fa-exclamation-triangle mr-2"></i>
-        <?= htmlspecialchars($error) ?>
-      </div>
-    <?php endif; ?>
-
-    <?php if ($success): ?>
-      <div class="bg-green-500/20 border border-green-500/50 text-green-300 px-4 py-3 rounded-lg mb-6">
-        <i class="fas fa-check-circle mr-2"></i>
-        <?= htmlspecialchars($success) ?>
+        <?= $error ?>
       </div>
     <?php endif; ?>
 
@@ -101,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       <div>
         <label for="username" class="block text-sm font-medium mb-2">Username</label>
         <input type="text" id="username" name="username" required
-          value="<?= htmlspecialchars($username ?? '') ?>"
+          value="<?= $_POST['username'] ?? '' ?>"
           class="w-full p-3 rounded-lg glass border border-gray-600 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all">
       </div>
       <div>
