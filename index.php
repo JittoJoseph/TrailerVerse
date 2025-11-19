@@ -4,15 +4,24 @@ require_once 'config/tmdb_config.php';
 require_once 'services/MovieService.php';
 require_once 'services/AchievementService.php';
 require_once 'services/GenreService.php';
+require_once 'services/StatsService.php';
 
 $movieService = new MovieService();
 $achievementService = new AchievementService();
 $genreService = new GenreService();
+$statsService = new StatsService();
 
 $trendingMovies = $movieService->getTrendingMovies();
 $movies = $trendingMovies['results'] ?? [];
 $latestAchievements = $achievementService->getLatestAchievements();
 $genres = $genreService->getGenres();
+
+$stats = [
+    'movies_tracked' => $statsService->getTotalMoviesTracked(),
+    'active_users' => $statsService->getTotalUsers(),
+    'reviews' => $statsService->getTotalReviews(),
+    'movies_watched' => $statsService->getTotalMoviesWatched(),
+];
 
 // Random featured movie from top 12 trending
 $featuredCandidates = array_slice($movies, 0, min(12, count($movies)));
@@ -212,18 +221,6 @@ $genreStyles = [
                           <i class="fas fa-play mr-3"></i>
                           Watch Now
                         </a>
-
-                        <?php if (isset($_SESSION['user_id'])): ?>
-                          <button class="px-8 py-4 glass rounded-xl hover:bg-white/10 transition-all duration-300 font-semibold inline-flex items-center">
-                            <i class="fas fa-plus mr-3"></i>
-                            My List
-                          </button>
-                        <?php else: ?>
-                          <a href="auth/signin.php" class="px-8 py-4 glass rounded-xl hover:bg-white/10 transition-all duration-300 font-semibold inline-flex items-center">
-                            <i class="fas fa-plus mr-3"></i>
-                            My List
-                          </a>
-                        <?php endif; ?>
                       </div>
                     </div>
 
@@ -360,20 +357,20 @@ $genreStyles = [
 
             <div class="grid grid-cols-2 gap-4">
               <div class="text-center p-4 bg-white/5 rounded-xl border border-white/10">
-                <div class="text-2xl font-bold text-white mb-1">847K</div>
+                <div class="text-2xl font-bold text-white mb-1"><?= number_format($stats['movies_tracked']) ?></div>
                 <div class="text-xs text-gray-400">Movies Tracked</div>
               </div>
               <div class="text-center p-4 bg-white/5 rounded-xl border border-white/10">
-                <div class="text-2xl font-bold text-white mb-1">12K</div>
+                <div class="text-2xl font-bold text-white mb-1"><?= number_format($stats['active_users']) ?></div>
                 <div class="text-xs text-gray-400">Active Users</div>
               </div>
               <div class="text-center p-4 bg-white/5 rounded-xl border border-white/10">
-                <div class="text-2xl font-bold text-white mb-1">234K</div>
+                <div class="text-2xl font-bold text-white mb-1"><?= number_format($stats['reviews']) ?></div>
                 <div class="text-xs text-gray-400">Reviews</div>
               </div>
               <div class="text-center p-4 bg-white/5 rounded-xl border border-white/10">
-                <div class="text-2xl font-bold text-white mb-1">98%</div>
-                <div class="text-xs text-gray-400">Satisfaction</div>
+                <div class="text-2xl font-bold text-white mb-1"><?= number_format($stats['movies_watched']) ?></div>
+                <div class="text-xs text-gray-400">Movies Watched</div>
               </div>
             </div>
           </div>
